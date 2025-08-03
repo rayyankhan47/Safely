@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
-const dgram = require('dgram');
 const os = require('os');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -9,10 +8,6 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow;
-let discoverySocket;
-let discoveredDevices = new Map(); // deviceId -> deviceInfo
-const DISCOVERY_PORT = 8888;
-const DISCOVERY_MESSAGE = 'SAFELY_DISCOVERY';
 
 const createWindow = () => {
   // Create the browser window.
@@ -45,99 +40,91 @@ const getLocalIP = () => {
   return '127.0.0.1';
 };
 
-// Start device discovery
-const startDeviceDiscovery = () => {
-  discoverySocket = dgram.createSocket('udp4');
-  
-  discoverySocket.on('error', (err) => {
-    console.error('Discovery socket error:', err);
-  });
+// Generate connection code
+const generateConnectionCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
 
-  // Listen for device broadcasts
-  discoverySocket.on('message', (msg, rinfo) => {
-    console.log(`Received UDP message from ${rinfo.address}:${rinfo.port}`);
-    console.log('Raw message:', msg.toString());
-    
-    try {
-      const data = JSON.parse(msg.toString());
-      console.log('Parsed discovery message:', data);
-      
-      if (data.type === 'device-broadcast') {
-        // Mobile device is announcing itself
-        const deviceId = `${rinfo.address}:${rinfo.port}`;
-        discoveredDevices.set(deviceId, {
-          ...data.deviceInfo,
-          address: rinfo.address,
-          port: rinfo.port,
-          lastSeen: Date.now()
-        });
-        
-        console.log('Updated discovered devices:', Array.from(discoveredDevices.values()));
-        
-        // Send updated device list to renderer
-        if (mainWindow) {
-          mainWindow.webContents.send('devices-updated', Array.from(discoveredDevices.values()));
+// Start connection server
+const startConnectionServer = () => {
+  // Create a simple HTTP server for mobile to connect to
+  const http = require('http');
+  
+  const server = http.createServer((req, res) => {
+    if (req.method === 'POST' && req.url === '/connect') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          const data = JSON.parse(body);
+          console.log('Mobile connection request:', data);
+          
+          if (data.connectionCode === connectionCode) {
+            // Code matches, establish connection
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: true, 
+              message: 'Connection established',
+              desktopIP: getLocalIP()
+            }));
+            
+            // Update connection status
+            if (mainWindow) {
+              mainWindow.webContents.send('mobile-connected', {
+                deviceInfo: data.deviceInfo,
+                timestamp: Date.now()
+              });
+            }
+          } else {
+            // Code doesn't match
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: false, 
+              message: 'Invalid connection code' 
+            }));
+          }
+        } catch (error) {
+          console.error('Error processing connection request:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false, 
+            message: 'Server error' 
+          }));
         }
-      }
-    } catch (error) {
-      console.error('Error parsing discovery message:', error);
+      });
+    } else {
+      res.writeHead(404);
+      res.end();
     }
-  });
-
-  // Broadcast discovery message periodically
-  const broadcastDiscovery = () => {
-    const message = JSON.stringify({
-      type: 'discovery-request',
-      from: 'desktop',
-      timestamp: Date.now()
-    });
-    
-    try {
-      discoverySocket.send(message, DISCOVERY_PORT, '255.255.255.255');
-      console.log('Sent discovery request to 255.255.255.255');
-    } catch (error) {
-      console.error('Error sending discovery request:', error);
-    }
-  };
-
-  // Start listening
-  discoverySocket.bind(DISCOVERY_PORT, () => {
-    discoverySocket.setBroadcast(true);
-    console.log(`Device discovery started on port ${DISCOVERY_PORT}`);
-    console.log(`Local IP: ${getLocalIP()}`);
-    console.log('Waiting for mobile devices to broadcast...');
-    
-    // Broadcast discovery request every 5 seconds
-    broadcastDiscovery();
-    setInterval(broadcastDiscovery, 5000);
-  });
-};
-
-// Send connection code to specific device
-const sendConnectionCode = (deviceAddress, devicePort, connectionCode) => {
-  const message = JSON.stringify({
-    type: 'connection-request',
-    connectionCode: connectionCode,
-    timestamp: Date.now()
   });
   
-  discoverySocket.send(message, devicePort, deviceAddress);
-  console.log(`Sent connection code ${connectionCode} to ${deviceAddress}:${devicePort}`);
+  const CONNECTION_PORT = 3000;
+  server.listen(CONNECTION_PORT, () => {
+    console.log(`Connection server started on port ${CONNECTION_PORT}`);
+    console.log(`Local IP: ${getLocalIP()}`);
+    console.log(`Connection code: ${connectionCode}`);
+  });
+  
+  return server;
 };
+
+// Generate connection code
+const connectionCode = generateConnectionCode();
 
 // IPC handlers for renderer communication
-ipcMain.handle('start-device-discovery', () => {
-  startDeviceDiscovery();
-  return { success: true, port: DISCOVERY_PORT };
-});
-
-ipcMain.handle('send-connection-code', (event, { deviceAddress, devicePort, connectionCode }) => {
-  sendConnectionCode(deviceAddress, devicePort, connectionCode);
-  return { success: true };
-});
-
-ipcMain.handle('get-discovered-devices', () => {
-  return Array.from(discoveredDevices.values());
+ipcMain.handle('get-connection-info', () => {
+  return { 
+    connectionCode: connectionCode,
+    desktopIP: getLocalIP(),
+    port: 3000
+  };
 });
 
 // This method will be called when Electron has finished
@@ -146,8 +133,8 @@ ipcMain.handle('get-discovered-devices', () => {
 app.whenReady().then(() => {
   createWindow();
   
-  // Start device discovery
-  startDeviceDiscovery();
+  // Start connection server
+  startConnectionServer();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.

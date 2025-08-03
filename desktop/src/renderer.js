@@ -34,61 +34,41 @@ function App() {
   const [step, setStep] = useState(1);
   const [connectionCode, setConnectionCode] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected
-  const [connectedDevice, setConnectedDevice] = useState('');
+  const [connectedDevice, setConnectedDevice] = useState(null);
   const [detectedSounds, setDetectedSounds] = useState([]);
-  const [discoveredDevices, setDiscoveredDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState(null);
   const { ipcRenderer } = window.require('electron');
 
-  // Generate connection code on component mount
+  // Get connection info on component mount
   useEffect(() => {
-    const generateCode = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
-      for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    const getConnectionInfo = async () => {
+      try {
+        const info = await ipcRenderer.invoke('get-connection-info');
+        setConnectionCode(info.connectionCode);
+      } catch (error) {
+        console.error('Error getting connection info:', error);
       }
-      return result;
     };
-    setConnectionCode(generateCode());
-  }, []);
+    getConnectionInfo();
+  }, [ipcRenderer]);
 
-  // Set up IPC listeners for device discovery
+  // Set up IPC listeners for mobile connection
   useEffect(() => {
-    // Devices updated
-    ipcRenderer.on('devices-updated', (event, devices) => {
-      console.log('Devices updated:', devices);
-      setDiscoveredDevices(devices);
+    // Mobile connected
+    ipcRenderer.on('mobile-connected', (event, data) => {
+      console.log('Mobile connected:', data);
+      setConnectedDevice(data.deviceInfo);
+      setConnectionStatus('connected');
     });
 
     return () => {
-      ipcRenderer.removeAllListeners('devices-updated');
+      ipcRenderer.removeAllListeners('mobile-connected');
     };
   }, [ipcRenderer]);
 
-  const handleDeviceSelect = async (device) => {
-    setSelectedDevice(device);
-    
-    // Send connection code to the selected device
-    try {
-      await ipcRenderer.invoke('send-connection-code', {
-        deviceAddress: device.address,
-        devicePort: device.port,
-        connectionCode: connectionCode
-      });
-      
-      setConnectionStatus('connecting');
-      console.log(`Sent connection code ${connectionCode} to ${device.name}`);
-    } catch (error) {
-      console.error('Error sending connection code:', error);
-    }
-  };
-
   const handleDisconnect = () => {
     setConnectionStatus('disconnected');
-    setConnectedDevice('');
+    setConnectedDevice(null);
     setDetectedSounds([]);
-    setSelectedDevice(null);
   };
 
   // Step 1: Welcome
@@ -138,7 +118,7 @@ function App() {
         
         {connectionStatus === 'disconnected' && (
           <div>
-            <h2 style={{ fontWeight: 700, fontSize: 26, margin: 0, marginBottom: 24 }}>Connect to Your Phone</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 26, margin: 0, marginBottom: 24 }}>Connect Your Phone</h2>
             
             <div style={{ 
               background: '#f5f5f5', 
@@ -154,46 +134,24 @@ function App() {
               {connectionCode}
             </div>
             
-            <p style={{ color: '#666', fontSize: 16, marginBottom: 24 }}>
-              Select your phone from the list below:
+            <p style={{ color: '#666', fontSize: 16, marginBottom: 8 }}>
+              Enter this code in your mobile app to connect
+            </p>
+            <p style={{ color: '#888', fontSize: 14, marginBottom: 24 }}>
+              Make sure both devices are on the same WiFi network
             </p>
             
-            {discoveredDevices.length === 0 ? (
-              <div style={{ color: '#888', fontSize: 14, marginBottom: 24 }}>
-                <p>Searching for devices...</p>
-                <p>Make sure your phone has Safely open and both devices are on the same WiFi network</p>
-              </div>
-            ) : (
-              <div style={{ width: '100%', marginBottom: 24 }}>
-                {discoveredDevices.map((device, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleDeviceSelect(device)}
-                    style={{
-                      width: '100%',
-                      padding: '16px',
-                      marginBottom: '8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      background: '#fff',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <div style={{ fontWeight: '600', color: '#111' }}>
-                      {device.name}'s {device.model}
-                    </div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>
-                      {device.address}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            <p style={{ color: '#0a0', fontSize: 14, marginBottom: 24 }}>
-              ● Device discovery running on port 8888
-            </p>
+            <div style={{ 
+              background: '#f8f9fa', 
+              padding: '16px 20px', 
+              borderRadius: 8, 
+              border: '1px solid #e9ecef',
+              marginBottom: 24
+            }}>
+              <p style={{ color: '#0a0', fontSize: 14, margin: 0 }}>
+                ● Waiting for mobile app to connect...
+              </p>
+            </div>
           </div>
         )}
 
@@ -226,7 +184,7 @@ function App() {
           <div>
             <h2 style={{ fontWeight: 700, fontSize: 26, margin: 0, marginBottom: 16 }}>Connected!</h2>
             <p style={{ color: '#0a0', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-              ● {connectedDevice} is connected!
+              ● {connectedDevice?.name}'s {connectedDevice?.model} is connected!
             </p>
             <p style={{ color: '#666', fontSize: 16, marginBottom: 32 }}>
               Listening for sounds...
