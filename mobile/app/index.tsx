@@ -10,9 +10,9 @@ export default function SafelyScreen() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
-  const [ws, setWs] = useState(null);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [desktopCode, setDesktopCode] = useState('');
+  const [receivedCode, setReceivedCode] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const DISCOVERY_PORT = 41234;
 
   // Generate connection code and get device info on mount
   useEffect(() => {
@@ -43,30 +43,27 @@ export default function SafelyScreen() {
     }
   };
 
-  const connectToDesktop = () => {
-    try {
-      // For now, we'll simulate WebSocket connection
-      // In a real implementation, you'd use a WebSocket library
-      console.log('Connecting to desktop WebSocket server...');
-      
-      // Simulate connection process
-      setTimeout(() => {
-        setWsConnected(true);
-        setConnectionStatus('connected');
-        
-        // Simulate sending connection code to desktop
-        console.log('Sending connection code to desktop:', connectionCode);
-        
-        // Simulate receiving connection acceptance
-        setTimeout(() => {
-          console.log('Connection accepted by desktop');
-        }, 1000);
-      }, 2000);
-      
-    } catch (error) {
-      console.error('WebSocket connection error:', error);
-      Alert.alert('Connection Error', 'Failed to connect to desktop app. Make sure both devices are on the same network.');
-    }
+  const startBroadcasting = () => {
+    setIsBroadcasting(true);
+    console.log('Started broadcasting device presence...');
+    
+    // In a real implementation, this would use react-native-udp
+    // For now, we'll simulate the broadcasting
+    const broadcastMessage = {
+      type: 'device-broadcast',
+      deviceInfo: deviceInfo,
+      timestamp: Date.now()
+    };
+    
+    console.log('Broadcasting:', broadcastMessage);
+    
+    // Simulate receiving connection requests
+    setTimeout(() => {
+      // Simulate receiving a connection code from desktop
+      const simulatedReceivedCode = connectionCode; // In real app, this would come from desktop
+      setReceivedCode(simulatedReceivedCode);
+      console.log('Received connection code:', simulatedReceivedCode);
+    }, 3000);
   };
 
   const handleConnect = async () => {
@@ -74,20 +71,28 @@ export default function SafelyScreen() {
     if (!permissionGranted) return;
 
     setConnectionStatus('connecting');
-    connectToDesktop();
+    startBroadcasting();
   };
 
   const handleDisconnect = () => {
-    if (ws) {
-      ws.close();
-    }
     setConnectionStatus('disconnected');
-    setWsConnected(false);
-    setWs(null);
+    setIsBroadcasting(false);
+    setReceivedCode('');
+  };
+
+  const confirmConnection = () => {
+    if (receivedCode === connectionCode) {
+      setConnectionStatus('connected');
+      Alert.alert('Connected!', 'Successfully connected to desktop app.');
+    } else {
+      Alert.alert('Code Mismatch', 'The connection code does not match. Please try again.');
+      setConnectionStatus('disconnected');
+      setReceivedCode('');
+    }
   };
 
   const simulateSoundDetection = () => {
-    if (wsConnected) {
+    if (connectionStatus === 'connected') {
       // Simulate detecting a sound
       const soundData = {
         type: 'sound-detected',
@@ -98,7 +103,7 @@ export default function SafelyScreen() {
       
       console.log('Sending sound alert to desktop:', soundData);
       
-      // In real implementation, this would be sent via WebSocket
+      // In real implementation, this would be sent via UDP
       Alert.alert('Sound Detected!', 'Screaming detected - alert sent to desktop');
     }
   };
@@ -143,38 +148,79 @@ export default function SafelyScreen() {
     );
   }
 
-  // Step 3: Connection Dashboard
+  // Step 3: Device Discovery Dashboard
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         
         {connectionStatus === 'disconnected' && (
           <View>
-            <Text style={styles.title}>Connect to Desktop</Text>
+            <Text style={styles.title}>Waiting for Desktop</Text>
             <Text style={styles.description}>
-              Enter this code on your Mac to connect:
+              Your phone is broadcasting its presence on the network.
             </Text>
-            <View style={styles.codeContainer}>
-              <Text style={styles.connectionCode}>{connectionCode}</Text>
-            </View>
+            
+            {isBroadcasting ? (
+              <View style={styles.broadcastingContainer}>
+                <Text style={styles.broadcastingText}>
+                  ● Broadcasting on port {DISCOVERY_PORT}
+                </Text>
+                <Text style={styles.broadcastingText}>
+                  Device: {deviceInfo?.name}'s {deviceInfo?.model}
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.button} onPress={handleConnect}>
+                <Text style={styles.buttonText}>Start Broadcasting</Text>
+              </TouchableOpacity>
+            )}
+            
             <Text style={styles.hint}>
-              Make sure both devices are on the same WiFi network
+              Open Safely on your Mac and select this device from the list
             </Text>
-            <TouchableOpacity style={styles.button} onPress={handleConnect}>
-              <Text style={styles.buttonText}>Connect</Text>
-            </TouchableOpacity>
           </View>
         )}
 
         {connectionStatus === 'connecting' && (
           <View>
-            <Text style={styles.title}>Connecting...</Text>
-            <View style={styles.codeContainer}>
-              <Text style={styles.connectionCode}>{connectionCode}</Text>
-            </View>
-            <Text style={styles.description}>
-              Waiting for desktop app to confirm connection...
-            </Text>
+            <Text style={styles.title}>Connection Request</Text>
+            
+            {receivedCode ? (
+              <View>
+                <Text style={styles.description}>
+                  Desktop app wants to connect with this code:
+                </Text>
+                <View style={styles.codeContainer}>
+                  <Text style={styles.connectionCode}>{receivedCode}</Text>
+                </View>
+                <Text style={styles.description}>
+                  Does this match the code shown on your Mac?
+                </Text>
+                
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity style={styles.confirmButton} onPress={confirmConnection}>
+                    <Text style={styles.confirmButtonText}>Yes, Connect</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.rejectButton} onPress={() => {
+                    setConnectionStatus('disconnected');
+                    setReceivedCode('');
+                  }}>
+                    <Text style={styles.rejectButtonText}>No, Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.description}>
+                  Waiting for connection code from desktop...
+                </Text>
+                <View style={styles.broadcastingContainer}>
+                  <Text style={styles.broadcastingText}>
+                    ● Broadcasting on port {DISCOVERY_PORT}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -250,6 +296,18 @@ const styles = StyleSheet.create({
   bold: {
     fontWeight: '600',
   },
+  broadcastingContainer: {
+    backgroundColor: '#f0f8ff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  broadcastingText: {
+    fontSize: 14,
+    color: '#0066cc',
+    marginBottom: 4,
+  },
   codeContainer: {
     backgroundColor: '#f5f5f5',
     padding: 24,
@@ -282,6 +340,37 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  confirmButton: {
+    backgroundColor: '#0a0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 1,
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  rejectButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 1,
+  },
+  rejectButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   connectedText: {
     fontSize: 18,

@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
-const WebSocket = require('ws');
+const dgram = require('dgram');
+const os = require('os');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -8,7 +9,10 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow;
-let wss; // WebSocket server
+let discoverySocket;
+let discoveredDevices = new Map(); // deviceId -> deviceInfo
+const DISCOVERY_PORT = 41234;
+const DISCOVERY_MESSAGE = 'SAFELY_DISCOVERY';
 
 const createWindow = () => {
   // Create the browser window.
@@ -28,82 +32,100 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
-// WebSocket server setup
-const startWebSocketServer = () => {
-  const PORT = 8080;
-  wss = new WebSocket.Server({ port: PORT });
-  
-  console.log(`WebSocket server started on port ${PORT}`);
-
-  wss.on('connection', (ws) => {
-    console.log('Mobile app connected!');
-    
-    // Send connection confirmation to renderer
-    if (mainWindow) {
-      mainWindow.webContents.send('mobile-connected', {
-        deviceInfo: 'Mobile Device',
-        timestamp: new Date().toISOString()
-      });
+// Get local IP address
+const getLocalIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const interface of interfaces[name]) {
+      if (interface.family === 'IPv4' && !interface.internal) {
+        return interface.address;
+      }
     }
+  }
+  return '127.0.0.1';
+};
 
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message);
-        console.log('Received from mobile:', data);
+// Start device discovery
+const startDeviceDiscovery = () => {
+  discoverySocket = dgram.createSocket('udp4');
+  
+  discoverySocket.on('error', (err) => {
+    console.error('Discovery socket error:', err);
+  });
+
+  // Listen for device broadcasts
+  discoverySocket.on('message', (msg, rinfo) => {
+    try {
+      const data = JSON.parse(msg.toString());
+      console.log('Received discovery message:', data);
+      
+      if (data.type === 'device-broadcast') {
+        // Mobile device is announcing itself
+        const deviceId = `${rinfo.address}:${rinfo.port}`;
+        discoveredDevices.set(deviceId, {
+          ...data.deviceInfo,
+          address: rinfo.address,
+          port: rinfo.port,
+          lastSeen: Date.now()
+        });
         
-        // Forward message to renderer
+        // Send updated device list to renderer
         if (mainWindow) {
-          mainWindow.webContents.send('mobile-message', data);
+          mainWindow.webContents.send('devices-updated', Array.from(discoveredDevices.values()));
         }
-        
-        // Handle different message types
-        switch (data.type) {
-          case 'connect':
-            // Mobile app is trying to connect with a code
-            if (mainWindow) {
-              mainWindow.webContents.send('mobile-connect-attempt', data);
-            }
-            break;
-            
-          case 'sound-detected':
-            // Mobile detected a sound - show notification
-            if (mainWindow) {
-              mainWindow.webContents.send('sound-alert', data);
-            }
-            break;
-            
-          default:
-            console.log('Unknown message type:', data.type);
-        }
-      } catch (error) {
-        console.error('Error parsing message:', error);
       }
-    });
+    } catch (error) {
+      console.error('Error parsing discovery message:', error);
+    }
+  });
 
-    ws.on('close', () => {
-      console.log('Mobile app disconnected');
-      if (mainWindow) {
-        mainWindow.webContents.send('mobile-disconnected');
-      }
+  // Broadcast discovery message periodically
+  const broadcastDiscovery = () => {
+    const message = JSON.stringify({
+      type: 'discovery-request',
+      from: 'desktop',
+      timestamp: Date.now()
     });
+    
+    discoverySocket.send(message, DISCOVERY_PORT, '255.255.255.255');
+  };
+
+  // Start listening
+  discoverySocket.bind(DISCOVERY_PORT, () => {
+    discoverySocket.setBroadcast(true);
+    console.log(`Device discovery started on port ${DISCOVERY_PORT}`);
+    
+    // Broadcast discovery request every 5 seconds
+    broadcastDiscovery();
+    setInterval(broadcastDiscovery, 5000);
   });
 };
 
+// Send connection code to specific device
+const sendConnectionCode = (deviceAddress, devicePort, connectionCode) => {
+  const message = JSON.stringify({
+    type: 'connection-request',
+    connectionCode: connectionCode,
+    timestamp: Date.now()
+  });
+  
+  discoverySocket.send(message, devicePort, deviceAddress);
+  console.log(`Sent connection code ${connectionCode} to ${deviceAddress}:${devicePort}`);
+};
+
 // IPC handlers for renderer communication
-ipcMain.handle('start-websocket-server', () => {
-  startWebSocketServer();
-  return { success: true, port: 8080 };
+ipcMain.handle('start-device-discovery', () => {
+  startDeviceDiscovery();
+  return { success: true, port: DISCOVERY_PORT };
 });
 
-ipcMain.handle('send-to-mobile', (event, message) => {
-  if (wss) {
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
-      }
-    });
-  }
+ipcMain.handle('send-connection-code', (event, { deviceAddress, devicePort, connectionCode }) => {
+  sendConnectionCode(deviceAddress, devicePort, connectionCode);
   return { success: true };
+});
+
+ipcMain.handle('get-discovered-devices', () => {
+  return Array.from(discoveredDevices.values());
 });
 
 // This method will be called when Electron has finished
@@ -112,8 +134,8 @@ ipcMain.handle('send-to-mobile', (event, message) => {
 app.whenReady().then(() => {
   createWindow();
   
-  // Start WebSocket server
-  startWebSocketServer();
+  // Start device discovery
+  startDeviceDiscovery();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
@@ -133,10 +155,10 @@ app.on('window-all-closed', () => {
   }
 });
 
-// Clean up WebSocket server on app quit
+// Clean up discovery socket on app quit
 app.on('before-quit', () => {
-  if (wss) {
-    wss.close();
+  if (discoverySocket) {
+    discoverySocket.close();
   }
 });
 
