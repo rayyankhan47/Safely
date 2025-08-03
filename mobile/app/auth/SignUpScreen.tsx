@@ -78,7 +78,7 @@ export default function SignUpScreen({ onSignUp, onGoogleSignUp, onLogin }: Sign
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join Safely and immerse yourself with peace of mind</Text>
+            <Text style={styles.subtitle}>Join Safely and immerse yourself with peace of mind and safety in crucial moments</Text>
           </View>
 
           {/* Form */}
