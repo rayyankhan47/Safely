@@ -47,21 +47,21 @@ function SafelyAppContent() {
     {
       title: "Safely",
       subtitle: "For anxiety, sensory sensitivity, and peace of mind",
-      description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Enjoy music without fear of missing important sounds.",
+      description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Focus on what you love without fear of missing important sounds.",
       icon: "shield-checkmark",
       gradient: ["#EF4444", "#DC2626"]
     },
     {
-      title: "Freedom to Listen",
+      title: "Freedom to Focus",
       subtitle: "Break free from obsessive worry",
-      description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the joy of music.",
+      description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the freedom to concentrate.",
       icon: "ear",
       gradient: ["#EF4444", "#DC2626"]
     },
     {
       title: "Your Safety, Your Privacy",
       subtitle: "Complete control and peace of mind",
-      description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to enjoy music while staying aware of what matters.",
+      description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to focus while staying aware of what matters.",
       icon: "lock-closed",
       gradient: ["#EF4444", "#DC2626"]
     }
