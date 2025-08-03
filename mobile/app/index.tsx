@@ -31,11 +31,11 @@ export default function SafelyApp() {
   const [isListening, setIsListening] = useState(false);
   
   // Animation values
-  const fadeAnim = useSharedValue(0);
-  const slideAnim = useSharedValue(0);
-  const scaleAnim = useSharedValue(0.95);
+  const titleAnim = useSharedValue(0);
+  const subtitleAnim = useSharedValue(0);
+  const descriptionAnim = useSharedValue(0);
+  const buttonsAnim = useSharedValue(0);
   const progressAnim = useSharedValue(0);
-  const floatingAnim = useSharedValue(0);
   const backgroundAnim = useSharedValue(0);
 
   const steps = [
@@ -63,20 +63,25 @@ export default function SafelyApp() {
   ];
 
   useEffect(() => {
-    // Initial animations
-    fadeAnim.value = withTiming(1, { duration: 300 });
-    slideAnim.value = withSpring(1, { damping: 20, stiffness: 100 });
-    scaleAnim.value = withSpring(1, { damping: 20, stiffness: 100 });
+    // Staggered animation sequence
+    // 1. Title appears first
+    titleAnim.value = withTiming(1, { duration: 600 });
     
-    // Floating animation
-    floatingAnim.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 3000 }),
-        withTiming(0, { duration: 3000 })
-      ),
-      -1,
-      true
-    );
+    // 2. Title moves up and subtitle appears
+    setTimeout(() => {
+      titleAnim.value = withSpring(1, { damping: 20, stiffness: 100 });
+      subtitleAnim.value = withTiming(1, { duration: 400 });
+    }, 800);
+    
+    // 3. Description appears
+    setTimeout(() => {
+      descriptionAnim.value = withTiming(1, { duration: 400 });
+    }, 1200);
+    
+    // 4. Buttons appear
+    setTimeout(() => {
+      buttonsAnim.value = withTiming(1, { duration: 400 });
+    }, 1600);
     
     // Background animation
     backgroundAnim.value = withRepeat(
@@ -112,22 +117,36 @@ export default function SafelyApp() {
   const currentStepData = steps[currentStep];
 
   // Animated styles
-  const containerStyle = useAnimatedStyle(() => ({
-    opacity: fadeAnim.value,
+  const titleStyle = useAnimatedStyle(() => ({
+    opacity: titleAnim.value,
     transform: [
-      { translateY: interpolate(slideAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) },
-      { scale: scaleAnim.value }
+      { translateY: interpolate(titleAnim.value, [0, 1], [50, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const subtitleStyle = useAnimatedStyle(() => ({
+    opacity: subtitleAnim.value,
+    transform: [
+      { translateY: interpolate(subtitleAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const descriptionStyle = useAnimatedStyle(() => ({
+    opacity: descriptionAnim.value,
+    transform: [
+      { translateY: interpolate(descriptionAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const buttonsStyle = useAnimatedStyle(() => ({
+    opacity: buttonsAnim.value,
+    transform: [
+      { translateY: interpolate(buttonsAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
     ]
   }));
 
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressAnim.value * 100}%`
-  }));
-
-  const floatingStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: interpolate(floatingAnim.value, [0, 1], [0, -10], Extrapolate.CLAMP) }
-    ]
   }));
 
   const backgroundStyle = useAnimatedStyle(() => ({
@@ -175,32 +194,16 @@ export default function SafelyApp() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={[styles.content, containerStyle]}>
-          {/* Icon with Linear-style gradient */}
-          <Animated.View style={[styles.iconContainer, floatingStyle]}>
-                          <LinearGradient
-                colors={currentStepData.gradient as any}
-                style={styles.iconGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-              <Ionicons 
-                name={currentStepData.icon as any} 
-                size={32} 
-                color="#fff" 
-              />
-            </LinearGradient>
-          </Animated.View>
-
+                <View style={styles.content}>
           {/* Text Content with Linear typography */}
           <View style={styles.textContainer}>
-            <Text style={styles.title}>{currentStepData.title}</Text>
-            <Text style={styles.subtitle}>{currentStepData.subtitle}</Text>
-            <Text style={styles.description}>{currentStepData.description}</Text>
+            <Animated.Text style={[styles.title, titleStyle]}>{currentStepData.title}</Animated.Text>
+            <Animated.Text style={[styles.subtitle, subtitleStyle]}>{currentStepData.subtitle}</Animated.Text>
+            <Animated.Text style={[styles.description, descriptionStyle]}>{currentStepData.description}</Animated.Text>
           </View>
 
           {/* Navigation with Linear-style buttons */}
-          <View style={styles.navigation}>
+          <Animated.View style={[styles.navigation, buttonsStyle]}>
             <TouchableOpacity 
               style={[styles.button, styles.secondaryButton]} 
               onPress={handleBack}
@@ -317,26 +320,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 40,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 48,
-    shadowColor: '#5E6AD2',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  iconGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   textContainer: {
     alignItems: 'center',
     marginBottom: 64,
