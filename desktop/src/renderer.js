@@ -192,7 +192,7 @@ function App() {
             )}
             
             <p style={{ color: '#0a0', fontSize: 14, marginBottom: 24 }}>
-              ● Device discovery running on port 41234
+              ● Device discovery running on port 8888
             </p>
           </div>
         )}
