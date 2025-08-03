@@ -181,7 +181,7 @@ export default function SignUpScreen({ onSignUp, onGoogleSignUp, onLogin }: Sign
           <View style={styles.buttons}>
             <TouchableOpacity style={styles.primaryButton} onPress={handleSignUp}>
               <LinearGradient
-                colors={['#60A5FA', '#3B82F6']}
+                colors={['#000000', '#000000']}
                 style={styles.primaryButtonGradient}
               >
                 <Text style={styles.primaryButtonText}>Create Account</Text>

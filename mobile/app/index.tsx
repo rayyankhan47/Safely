@@ -49,21 +49,21 @@ function SafelyAppContent() {
       subtitle: "For anxiety, sensory sensitivity, and peace of mind",
       description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Immerse yourself without fear of missing critical sounds.",
       icon: "shield-checkmark",
-      gradient: ["#60A5FA", "#3B82F6"]
+      gradient: ["#000000", "#000000"]
     },
     {
       title: "Freedom to Focus",
       subtitle: "Break free from obsessive worry",
       description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the freedom to concentrate.",
       icon: "ear",
-      gradient: ["#60A5FA", "#3B82F6"]
+      gradient: ["#000000", "#000000"]
     },
     {
       title: "Your Safety, Your Privacy",
       subtitle: "Complete control and peace of mind",
       description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to focus while staying aware of what matters.",
       icon: "lock-closed",
-      gradient: ["#60A5FA", "#3B82F6"]
+      gradient: ["#000000", "#000000"]
     }
   ];
 
