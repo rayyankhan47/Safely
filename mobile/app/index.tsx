@@ -27,6 +27,7 @@ import Svg, { Circle, Rect, Path } from 'react-native-svg';
 import AuthProvider, { useAuth } from './context/AuthContext';
 import SignUpScreen from './auth/SignUpScreen';
 import LoginScreen from './auth/LoginScreen';
+import Questionnaire, { QuestionnaireData } from '../components/Questionnaire';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,6 +37,8 @@ function SafelyAppContent() {
   const [isListening, setIsListening] = useState(false);
   const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
   const [showEntrance, setShowEntrance] = useState(true);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<QuestionnaireData | null>(null);
   
   // Animation values - always declare these
   const subtitleAnim = useSharedValue(0);
@@ -201,11 +204,8 @@ function SafelyAppContent() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      if (user) {
-        setIsListening(true);
-      } else {
-        setShowAuth('signup');
-      }
+      // Show questionnaire after onboarding
+      setShowQuestionnaire(true);
     }
   };
 
@@ -245,6 +245,29 @@ function SafelyAppContent() {
       setShowAuth(null);
     } catch (error) {
       console.error('Google auth error:', error);
+    }
+  };
+
+  const handleQuestionnaireComplete = (data: QuestionnaireData) => {
+    setUserPreferences(data);
+    setShowQuestionnaire(false);
+    
+    // After questionnaire, show auth if not logged in
+    if (user) {
+      setIsListening(true);
+    } else {
+      setShowAuth('signup');
+    }
+  };
+
+  const handleQuestionnaireSkip = () => {
+    setShowQuestionnaire(false);
+    
+    // After skipping questionnaire, show auth if not logged in
+    if (user) {
+      setIsListening(true);
+    } else {
+      setShowAuth('signup');
     }
   };
 
@@ -327,6 +350,16 @@ function SafelyAppContent() {
           // TODO: Implement forgot password
           console.log('Forgot password');
         }}
+      />
+    );
+  }
+
+  // Show questionnaire
+  if (showQuestionnaire) {
+    return (
+      <Questionnaire
+        onComplete={handleQuestionnaireComplete}
+        onSkip={handleQuestionnaireSkip}
       />
     );
   }
