@@ -23,7 +23,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Rect, Path } from 'react-native-svg';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import AuthProvider, { useAuth } from './context/AuthContext';
 import SignUpScreen from './auth/SignUpScreen';
 import LoginScreen from './auth/LoginScreen';
 
@@ -35,7 +35,7 @@ function SafelyAppContent() {
   const [isListening, setIsListening] = useState(false);
   const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
   
-  // Animation values
+  // Animation values - always declare these
   const titleAnim = useSharedValue(0);
   const subtitleAnim = useSharedValue(0);
   const descriptionAnim = useSharedValue(0);
@@ -49,21 +49,21 @@ function SafelyAppContent() {
       subtitle: "Your AI-powered safety companion",
       description: "Safely listens to your environment and alerts you to important sounds while you're wearing headphones.",
       icon: "shield-checkmark",
-      gradient: ["#5E6AD2", "#7C3AED"]
+      gradient: ["#EF4444", "#DC2626"]
     },
     {
       title: "Stay Aware",
       subtitle: "Never miss what matters",
       description: "From fire alarms to baby cries, from emergency announcements to breaking glass - Safely keeps you informed.",
       icon: "ear",
-      gradient: ["#7C3AED", "#EC4899"]
+      gradient: ["#EF4444", "#DC2626"]
     },
     {
       title: "Privacy First",
       subtitle: "Your data stays yours",
       description: "All audio processing happens locally on your device. Nothing is recorded or sent to our servers.",
       icon: "lock-closed",
-      gradient: ["#EC4899", "#F59E0B"]
+      gradient: ["#EF4444", "#DC2626"]
     }
   ];
 
@@ -149,44 +149,6 @@ function SafelyAppContent() {
     }
   };
 
-  // Show loading screen
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show authentication screens
-  if (showAuth === 'signup') {
-    return (
-      <SignUpScreen
-        onSignUp={handleSignUp}
-        onGoogleSignUp={handleGoogleAuth}
-        onLogin={() => setShowAuth('login')}
-      />
-    );
-  }
-
-  if (showAuth === 'login') {
-    return (
-      <LoginScreen
-        onLogin={handleLogin}
-        onGoogleLogin={handleGoogleAuth}
-        onSignUp={() => setShowAuth('signup')}
-        onForgotPassword={() => {
-          // TODO: Implement forgot password
-          console.log('Forgot password');
-        }}
-      />
-    );
-  }
-
-  const currentStepData = steps[currentStep];
-
   // Animated styles
   const titleStyle = useAnimatedStyle(() => ({
     opacity: titleAnim.value,
@@ -234,13 +196,53 @@ function SafelyAppContent() {
     ]
   }));
 
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show authentication screens
+  if (showAuth === 'signup') {
+    return (
+      <SignUpScreen
+        onSignUp={handleSignUp}
+        onGoogleSignUp={handleGoogleAuth}
+        onLogin={() => setShowAuth('login')}
+      />
+    );
+  }
+
+  if (showAuth === 'login') {
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        onGoogleLogin={handleGoogleAuth}
+        onSignUp={() => setShowAuth('signup')}
+        onForgotPassword={() => {
+          // TODO: Implement forgot password
+          console.log('Forgot password');
+        }}
+      />
+    );
+  }
+
+  // Show main app content
   if (isListening) {
     return <MainApp />;
   }
 
+  // Show onboarding
+  const currentStepData = steps[currentStep];
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0D1117" />
+      <StatusBar barStyle="light-content" backgroundColor="#FFFFFF" />
       
       {/* Linear-style background with geometric elements */}
       <View style={styles.backgroundContainer}>
@@ -250,8 +252,6 @@ function SafelyAppContent() {
             style={styles.orbGradient}
           />
         </Animated.View>
-        
-
       </View>
 
       {/* Progress Bar */}
@@ -267,7 +267,7 @@ function SafelyAppContent() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-                <View style={styles.content}>
+        <View style={styles.content}>
           {/* Text Content with Linear typography */}
           <View style={styles.textContainer}>
             <Animated.Text style={[styles.title, titleStyle]}>{currentStepData.title}</Animated.Text>
