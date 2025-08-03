@@ -246,12 +246,159 @@ export default function SafelyApp() {
 
 // Main App Component (placeholder for now)
 function MainApp() {
+  const [isListening, setIsListening] = useState(true);
+  const [currentSounds, setCurrentSounds] = useState<string[]>([]);
+  const [alertLevel, setAlertLevel] = useState<'none' | 'low' | 'medium' | 'high'>('none');
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // Animation values for audio visualizer
+  const audioBars = Array.from({ length: 20 }, () => useSharedValue(0));
+  const pulseAnim = useSharedValue(1);
+  
+  // Simulate audio detection (replace with real YAMNet later)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Simulate audio bars
+      audioBars.forEach((bar, index) => {
+        bar.value = withTiming(Math.random() * 100, { duration: 200 });
+      });
+      
+      // Simulate sound detection
+      const sounds = ['Background noise', 'Keyboard typing', 'Distant conversation'];
+      const randomSounds = sounds.filter(() => Math.random() > 0.7);
+      setCurrentSounds(randomSounds);
+      
+      // Simulate alert levels
+      const levels: Array<'none' | 'low' | 'medium' | 'high'> = ['none', 'low', 'medium', 'high'];
+      setAlertLevel(levels[Math.floor(Math.random() * 4)]);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Pulse animation for listening indicator
+  useEffect(() => {
+    pulseAnim.value = withRepeat(
+      withTiming(1.2, { duration: 1000 }),
+      -1,
+      true
+    );
+  }, []);
+  
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
+    opacity: interpolate(pulseAnim.value, [1, 1.2], [0.6, 1], Extrapolate.CLAMP),
+  }));
+  
+  const audioBarStyles = audioBars.map((bar, index) => 
+    useAnimatedStyle(() => ({
+      height: bar.value,
+      opacity: interpolate(bar.value, [0, 100], [0.3, 1], Extrapolate.CLAMP),
+    }))
+  );
+  
+  const getAlertColor = () => {
+    switch (alertLevel) {
+      case 'low': return '#F59E0B';
+      case 'medium': return '#F97316';
+      case 'high': return '#EF4444';
+      default: return '#5E6AD2';
+    }
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Safely</Text>
-        <Text style={styles.subtitle}>Listening for sounds...</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#0D1117" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Safely</Text>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => setShowSettings(!showSettings)}
+        >
+          <Ionicons name="settings-outline" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
+      
+      {/* Main Content */}
+      <View style={styles.mainContent}>
+        {/* Status Indicator */}
+        <View style={styles.statusContainer}>
+          <Animated.View style={[styles.listeningIndicator, pulseStyle]}>
+            <View style={[styles.indicatorDot, { backgroundColor: getAlertColor() }]} />
+          </Animated.View>
+          <Text style={styles.statusText}>
+            {isListening ? 'Listening' : 'Paused'}
+          </Text>
+        </View>
+        
+        {/* Audio Visualizer */}
+        <View style={styles.visualizerContainer}>
+          <View style={styles.audioBars}>
+            {audioBars.map((_, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.audioBar,
+                  audioBarStyles[index],
+                  { backgroundColor: getAlertColor() }
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+        
+        {/* Current Sounds */}
+        <View style={styles.soundsContainer}>
+          <Text style={styles.soundsTitle}>Currently Hearing:</Text>
+          {currentSounds.length > 0 ? (
+            currentSounds.map((sound, index) => (
+              <View key={index} style={styles.soundItem}>
+                <Ionicons name="ear-outline" size={16} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.soundText}>{sound}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noSoundsText}>Background noise</Text>
+          )}
+        </View>
+        
+        {/* Alert Level */}
+        {alertLevel !== 'none' && (
+          <View style={[styles.alertContainer, { backgroundColor: getAlertColor() + '20' }]}>
+            <Ionicons 
+              name={alertLevel === 'high' ? 'warning' : 'information-circle'} 
+              size={20} 
+              color={getAlertColor()} 
+            />
+            <Text style={[styles.alertText, { color: getAlertColor() }]}>
+              {alertLevel === 'high' ? 'High priority sound detected!' : 
+               alertLevel === 'medium' ? 'Medium priority sound detected' : 
+               'Low priority sound detected'}
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      {/* Settings Panel */}
+      {showSettings && (
+        <View style={styles.settingsPanel}>
+          <Text style={styles.settingsTitle}>Settings</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={styles.settingLabel}>Sound Sensitivity</Text>
+            <Text style={styles.settingValue}>Medium</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={styles.settingLabel}>Alert Types</Text>
+            <Text style={styles.settingValue}>All Sounds</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={styles.settingLabel}>Notifications</Text>
+            <Text style={styles.settingValue}>Enabled</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -397,5 +544,140 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginLeft: 8,
+  },
+  
+  // MainApp Styles
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.5,
+  },
+  settingsButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  listeningIndicator: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  indicatorDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  visualizerContainer: {
+    marginBottom: 40,
+  },
+  audioBars: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 100,
+    gap: 2,
+  },
+  audioBar: {
+    width: 4,
+    backgroundColor: '#5E6AD2',
+    borderRadius: 2,
+    minHeight: 4,
+  },
+  soundsContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  soundsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 16,
+  },
+  soundItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  soundText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+  noSoundsText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontStyle: 'italic',
+  },
+  alertContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  alertText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  settingsPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1F2937',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  settingsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 24,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  settingValue: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.6)',
   },
 });
