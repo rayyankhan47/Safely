@@ -360,6 +360,11 @@ function SafelyAppContent() {
         </View>
       </View>
 
+      {/* Persistent Safely Title */}
+      <View style={styles.persistentTitleContainer}>
+        <Text style={styles.persistentTitle}>Safely</Text>
+      </View>
+
       {/* Main Content */}
       <ScrollView 
         style={styles.scrollView}
@@ -886,6 +891,20 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  
+  // Persistent Title Styles
+  persistentTitleContainer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  persistentTitle: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#000000',
+    textAlign: 'center',
+    letterSpacing: -1,
   },
 });
 
