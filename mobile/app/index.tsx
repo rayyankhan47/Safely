@@ -76,6 +76,7 @@ export default function SafelyScreen() {
         console.log('Parsed message:', data);
         
         if (data.type === 'discovery-request') {
+          console.log('Processing discovery request...');
           // Desktop is looking for devices, respond with broadcast
           const broadcastMessage = {
             type: 'device-broadcast',
@@ -83,9 +84,11 @@ export default function SafelyScreen() {
             timestamp: Date.now()
           };
           
+          console.log('Sending response:', broadcastMessage);
+          
           try {
             discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, rinfo.address);
-            console.log('Responded to discovery request from:', rinfo.address);
+            console.log('Successfully responded to discovery request from:', rinfo.address);
           } catch (error) {
             console.error('Error responding to discovery request:', error);
           }
