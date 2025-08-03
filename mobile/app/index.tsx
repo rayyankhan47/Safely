@@ -96,6 +96,7 @@ export default function SafelyScreen() {
     discoverySocket.bind(DISCOVERY_PORT, () => {
       discoverySocket.setBroadcast(true);
       console.log(`UDP listening on port ${DISCOVERY_PORT}`);
+      console.log(`Broadcasting to: ${BROADCAST_ADDRESS}:${DISCOVERY_PORT}`);
       
       // Broadcast presence periodically
       const broadcastPresence = () => {
@@ -105,8 +106,24 @@ export default function SafelyScreen() {
           timestamp: Date.now()
         };
         
-        discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, BROADCAST_ADDRESS);
-        console.log('Broadcasting presence...');
+        try {
+          // Try broadcast first
+          discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, BROADCAST_ADDRESS);
+          console.log('Broadcasting presence...', broadcastMessage);
+          
+          // Also try sending to common local network addresses
+          const localAddresses = ['192.168.1.255', '10.0.0.255', '172.16.0.255'];
+          localAddresses.forEach(addr => {
+            try {
+              discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, addr);
+              console.log(`Also broadcasting to ${addr}`);
+            } catch (e) {
+              console.log(`Failed to broadcast to ${addr}:`, e.message);
+            }
+          });
+        } catch (error) {
+          console.error('Error broadcasting:', error);
+        }
       };
       
       // Broadcast immediately and every 3 seconds

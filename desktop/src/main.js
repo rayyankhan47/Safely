@@ -55,9 +55,12 @@ const startDeviceDiscovery = () => {
 
   // Listen for device broadcasts
   discoverySocket.on('message', (msg, rinfo) => {
+    console.log(`Received UDP message from ${rinfo.address}:${rinfo.port}`);
+    console.log('Raw message:', msg.toString());
+    
     try {
       const data = JSON.parse(msg.toString());
-      console.log('Received discovery message:', data);
+      console.log('Parsed discovery message:', data);
       
       if (data.type === 'device-broadcast') {
         // Mobile device is announcing itself
@@ -68,6 +71,8 @@ const startDeviceDiscovery = () => {
           port: rinfo.port,
           lastSeen: Date.now()
         });
+        
+        console.log('Updated discovered devices:', Array.from(discoveredDevices.values()));
         
         // Send updated device list to renderer
         if (mainWindow) {
@@ -94,6 +99,7 @@ const startDeviceDiscovery = () => {
   discoverySocket.bind(DISCOVERY_PORT, () => {
     discoverySocket.setBroadcast(true);
     console.log(`Device discovery started on port ${DISCOVERY_PORT}`);
+    console.log(`Local IP: ${getLocalIP()}`);
     
     // Broadcast discovery request every 5 seconds
     broadcastDiscovery();
