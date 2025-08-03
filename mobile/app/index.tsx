@@ -38,7 +38,6 @@ function SafelyAppContent() {
   const [showEntrance, setShowEntrance] = useState(true);
   
   // Animation values - always declare these
-  const titleAnim = useSharedValue(0);
   const subtitleAnim = useSharedValue(0);
   const descriptionAnim = useSharedValue(0);
   const buttonsAnim = useSharedValue(0);
@@ -49,19 +48,6 @@ function SafelyAppContent() {
   const entranceBackgroundAnim = useSharedValue(0);
 
   // ALL Animated styles - must be declared before any conditional rendering
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleAnim.value,
-    transform: [
-      { 
-        translateY: interpolate(
-          titleAnim.value, 
-          [0, 1], 
-          [20, 0], // Simple slide up
-          Extrapolate.CLAMP
-        ) 
-      }
-    ]
-  }));
 
   const subtitleStyle = useAnimatedStyle(() => ({
     opacity: subtitleAnim.value,
@@ -147,21 +133,18 @@ function SafelyAppContent() {
 
   const steps = [
     {
-      title: "Safely",
       subtitle: "For anxiety, sensory sensitivity, and peace of mind",
       description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Immerse yourself without fear of missing critical sounds.",
       icon: "shield-checkmark",
       gradient: ["#000000", "#000000"]
     },
     {
-      title: "Freedom to Focus",
       subtitle: "Break free from obsessive worry",
       description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the freedom to concentrate.",
       icon: "ear",
       gradient: ["#000000", "#000000"]
     },
     {
-      title: "Your Safety, Your Privacy",
       subtitle: "Complete control and peace of mind",
       description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to focus while staying aware of what matters.",
       icon: "lock-closed",
@@ -186,11 +169,7 @@ function SafelyAppContent() {
         setTimeout(() => {
           setShowEntrance(false);
           // Start main app animations
-          titleAnim.value = withTiming(1, { duration: 800 });
-          
-          setTimeout(() => {
-            subtitleAnim.value = withTiming(1, { duration: 600 });
-          }, 400);
+          subtitleAnim.value = withTiming(1, { duration: 600 });
           
           setTimeout(() => {
             descriptionAnim.value = withTiming(1, { duration: 600 });
@@ -390,7 +369,6 @@ function SafelyAppContent() {
         <View style={styles.content}>
           {/* Text Content with Linear typography */}
           <View style={styles.textContainer}>
-            <Animated.Text style={[styles.title, titleStyle]}>{currentStepData.title}</Animated.Text>
             <Animated.Text style={[styles.subtitle, subtitleStyle]}>{currentStepData.subtitle}</Animated.Text>
             <Animated.Text style={[styles.description, descriptionStyle]}>{currentStepData.description}</Animated.Text>
           </View>
