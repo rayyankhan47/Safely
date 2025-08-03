@@ -32,7 +32,6 @@ export default function SafelyApp() {
   
   // Animation values
   const titleAnim = useSharedValue(0);
-  const titlePositionAnim = useSharedValue(0); // Separate animation for positioning
   const subtitleAnim = useSharedValue(0);
   const descriptionAnim = useSharedValue(0);
   const buttonsAnim = useSharedValue(0);
@@ -64,29 +63,20 @@ export default function SafelyApp() {
   ];
 
   useEffect(() => {
-    // Animation sequence:
-    // 1. "Safely" appears big and centered (0ms)
-    titleAnim.value = withTiming(1, { duration: 600 });
+    // Simple staggered fade-in animation
+    titleAnim.value = withTiming(1, { duration: 800 });
     
-    // 2. "Safely" stays for 0.8 seconds, then moves up over 1 second (800ms)
-    setTimeout(() => {
-      titlePositionAnim.value = withTiming(1, { duration: 1000 });
-    }, 800);
-    
-    // 3. Subtitle appears as title reaches final position (2000ms)
     setTimeout(() => {
       subtitleAnim.value = withTiming(1, { duration: 600 });
-    }, 2000);
+    }, 400);
     
-    // 4. Description appears (2800ms)
     setTimeout(() => {
       descriptionAnim.value = withTiming(1, { duration: 600 });
-    }, 2800);
+    }, 800);
     
-    // 5. Buttons appear (3600ms)
     setTimeout(() => {
       buttonsAnim.value = withTiming(1, { duration: 600 });
-    }, 3600);
+    }, 1200);
     
     // Background animation
     backgroundAnim.value = withRepeat(
@@ -127,19 +117,11 @@ export default function SafelyApp() {
     transform: [
       { 
         translateY: interpolate(
-          titlePositionAnim.value, 
+          titleAnim.value, 
           [0, 1], 
-          [height / 2 - 100, 0], // Start perfectly centered, move to top
+          [20, 0], // Simple slide up
           Extrapolate.CLAMP
         ) 
-      },
-      {
-        scale: interpolate(
-          titlePositionAnim.value,
-          [0, 1],
-          [2.5, 1], // Start much bigger, scale down to normal
-          Extrapolate.CLAMP
-        )
       }
     ]
   }));
@@ -347,13 +329,13 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   title: {
-    fontSize: 64,
+    fontSize: 36,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.5,
-    lineHeight: 72,
+    lineHeight: 44,
   },
   subtitle: {
     fontSize: 18,
