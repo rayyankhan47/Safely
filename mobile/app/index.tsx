@@ -32,7 +32,7 @@ import Questionnaire, { QuestionnaireData } from '../components/Questionnaire';
 const { width, height } = Dimensions.get('window');
 
 function SafelyAppContent() {
-  const { user, isLoading, signUp, signIn, signInWithGoogle, signOut } = useAuth();
+  const { user, isLoading, signUp, signIn, signInWithGoogle, signOut, updatePreferences } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
@@ -223,8 +223,13 @@ function SafelyAppContent() {
     password: string;
   }) => {
     try {
-      await signUp(userData);
-      setShowAuth(null);
+      const { error } = await signUp(userData);
+      if (!error) {
+        setShowAuth(null);
+      } else {
+        console.error('Sign up error:', error.message);
+        // TODO: Show error to user
+      }
     } catch (error) {
       console.error('Sign up error:', error);
     }
@@ -232,8 +237,13 @@ function SafelyAppContent() {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      await signIn(email, password);
-      setShowAuth(null);
+      const { error } = await signIn(email, password);
+      if (!error) {
+        setShowAuth(null);
+      } else {
+        console.error('Login error:', error.message);
+        // TODO: Show error to user
+      }
     } catch (error) {
       console.error('Login error:', error);
     }
@@ -241,19 +251,28 @@ function SafelyAppContent() {
 
   const handleGoogleAuth = async () => {
     try {
-      await signInWithGoogle();
-      setShowAuth(null);
+      const { error } = await signInWithGoogle();
+      if (!error) {
+        setShowAuth(null);
+      } else {
+        console.error('Google auth error:', error.message);
+        // TODO: Show error to user
+      }
     } catch (error) {
       console.error('Google auth error:', error);
     }
   };
 
-  const handleQuestionnaireComplete = (data: QuestionnaireData) => {
+  const handleQuestionnaireComplete = async (data: QuestionnaireData) => {
     setUserPreferences(data);
     setShowQuestionnaire(false);
     
-    // After questionnaire, show auth if not logged in
+    // Save preferences to database if user is logged in
     if (user) {
+      const { error } = await updatePreferences(data);
+      if (error) {
+        console.error('Error saving preferences:', error.message);
+      }
       setIsListening(true);
     } else {
       setShowAuth('signup');
