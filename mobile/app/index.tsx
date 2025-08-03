@@ -196,6 +196,12 @@ function SafelyAppContent() {
     ]
   }));
 
+  const buttonGradientStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: interpolate(backgroundAnim.value, [0, 1], [-100, 100], Extrapolate.CLAMP) }
+    ]
+  }));
+
   // Show loading screen
   if (isLoading) {
     return (
@@ -291,22 +297,25 @@ function SafelyAppContent() {
               style={[styles.button, styles.primaryButton]} 
               onPress={handleNext}
             >
-              <LinearGradient
-                colors={currentStepData.gradient as any}
-                style={styles.primaryButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
+              <View style={styles.primaryButtonContainer}>
+                <Animated.View style={[styles.primaryButtonGradient, buttonGradientStyle]}>
+                  <LinearGradient
+                    colors={['rgba(96, 165, 250, 0.1)', 'rgba(59, 130, 246, 0.1)'] as any}
+                    style={styles.gradientFill}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  />
+                </Animated.View>
                 <Text style={[styles.buttonText, styles.primaryButtonText]}>
                   {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
                 </Text>
                 <Ionicons 
                   name="arrow-forward" 
                   size={18} 
-                  color="#fff" 
+                  color="#000000" 
                   style={styles.buttonIcon}
                 />
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -585,13 +594,29 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  primaryButtonGradient: {
+  primaryButtonContainer: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
+    position: 'relative',
+  },
+  primaryButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '200%',
+  },
+  gradientFill: {
+    width: '100%',
+    height: '100%',
   },
   secondaryButton: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -603,7 +628,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryButtonText: {
-    color: '#fff',
+    color: '#000000',
   },
   secondaryButtonText: {
     color: 'rgba(0, 0, 0, 0.8)',
