@@ -23,12 +23,17 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Rect, Path } from 'react-native-svg';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import SignUpScreen from './auth/SignUpScreen';
+import LoginScreen from './auth/LoginScreen';
 
 const { width, height } = Dimensions.get('window');
 
-export default function SafelyApp() {
+function SafelyAppContent() {
+  const { user, isLoading, signUp, signIn, signInWithGoogle, signOut } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isListening, setIsListening] = useState(false);
+  const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
   
   // Animation values
   const titleAnim = useSharedValue(0);
@@ -97,8 +102,11 @@ export default function SafelyApp() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Start the main app
-      setIsListening(true);
+      if (user) {
+        setIsListening(true);
+      } else {
+        setShowAuth('signup');
+      }
     }
   };
 
@@ -108,6 +116,74 @@ export default function SafelyApp() {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  const handleSignUp = async (userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }) => {
+    try {
+      await signUp(userData);
+      setShowAuth(null);
+    } catch (error) {
+      console.error('Sign up error:', error);
+    }
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      await signIn(email, password);
+      setShowAuth(null);
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      await signInWithGoogle();
+      setShowAuth(null);
+    } catch (error) {
+      console.error('Google auth error:', error);
+    }
+  };
+
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show authentication screens
+  if (showAuth === 'signup') {
+    return (
+      <SignUpScreen
+        onSignUp={handleSignUp}
+        onGoogleSignUp={handleGoogleAuth}
+        onLogin={() => setShowAuth('login')}
+      />
+    );
+  }
+
+  if (showAuth === 'login') {
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        onGoogleLogin={handleGoogleAuth}
+        onSignUp={() => setShowAuth('signup')}
+        onForgotPassword={() => {
+          // TODO: Implement forgot password
+          console.log('Forgot password');
+        }}
+      />
+    );
+  }
 
   const currentStepData = steps[currentStep];
 
@@ -670,4 +746,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.6)',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#000000',
+  },
 });
+
+export default function SafelyApp() {
+  return (
+    <AuthProvider>
+      <SafelyAppContent />
+    </AuthProvider>
+  );
+}
