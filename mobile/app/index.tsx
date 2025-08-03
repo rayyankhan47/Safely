@@ -47,6 +47,81 @@ function SafelyAppContent() {
   const entranceTitleAnim = useSharedValue(0);
   const entranceBackgroundAnim = useSharedValue(0);
 
+  // ALL Animated styles - must be declared before any conditional rendering
+  const titleStyle = useAnimatedStyle(() => ({
+    opacity: titleAnim.value,
+    transform: [
+      { 
+        translateY: interpolate(
+          titleAnim.value, 
+          [0, 1], 
+          [20, 0], // Simple slide up
+          Extrapolate.CLAMP
+        ) 
+      }
+    ]
+  }));
+
+  const subtitleStyle = useAnimatedStyle(() => ({
+    opacity: subtitleAnim.value,
+    transform: [
+      { translateY: interpolate(subtitleAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const descriptionStyle = useAnimatedStyle(() => ({
+    opacity: descriptionAnim.value,
+    transform: [
+      { translateY: interpolate(descriptionAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const buttonsStyle = useAnimatedStyle(() => ({
+    opacity: buttonsAnim.value,
+    transform: [
+      { translateY: interpolate(buttonsAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressAnim.value * 100}%`
+  }));
+
+  const backgroundStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: interpolate(backgroundAnim.value, [0, 1], [0, 50], Extrapolate.CLAMP) },
+      { translateY: interpolate(backgroundAnim.value, [0, 1], [0, -30], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const buttonGradientStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: interpolate(backgroundAnim.value, [0, 1], [-100, 100], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const entranceTitleStyle = useAnimatedStyle(() => ({
+    opacity: entranceTitleAnim.value,
+    transform: [
+      { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const entranceBackgroundStyle = useAnimatedStyle(() => ({
+    transform: [
+      { 
+        rotate: `${interpolate(entranceBackgroundAnim.value, [0, 1], [0, 360], Extrapolate.CLAMP)}deg` 
+      },
+      { 
+        translateX: interpolate(entranceBackgroundAnim.value, [0, 1], [0, 100], Extrapolate.CLAMP) 
+      }
+    ]
+  }));
+
+  const entranceTransitionStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(entranceAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
+  }));
+
   const steps = [
     {
       title: "Safely",
@@ -171,58 +246,7 @@ function SafelyAppContent() {
     }
   };
 
-  // Animated styles
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleAnim.value,
-    transform: [
-      { 
-        translateY: interpolate(
-          titleAnim.value, 
-          [0, 1], 
-          [20, 0], // Simple slide up
-          Extrapolate.CLAMP
-        ) 
-      }
-    ]
-  }));
 
-  const subtitleStyle = useAnimatedStyle(() => ({
-    opacity: subtitleAnim.value,
-    transform: [
-      { translateY: interpolate(subtitleAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
-    ]
-  }));
-
-  const descriptionStyle = useAnimatedStyle(() => ({
-    opacity: descriptionAnim.value,
-    transform: [
-      { translateY: interpolate(descriptionAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
-    ]
-  }));
-
-  const buttonsStyle = useAnimatedStyle(() => ({
-    opacity: buttonsAnim.value,
-    transform: [
-      { translateY: interpolate(buttonsAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
-    ]
-  }));
-
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${progressAnim.value * 100}%`
-  }));
-
-  const backgroundStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: interpolate(backgroundAnim.value, [0, 1], [0, 50], Extrapolate.CLAMP) },
-      { translateY: interpolate(backgroundAnim.value, [0, 1], [0, -30], Extrapolate.CLAMP) }
-    ]
-  }));
-
-  const buttonGradientStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: interpolate(backgroundAnim.value, [0, 1], [-100, 100], Extrapolate.CLAMP) }
-    ]
-  }));
 
   // Show loading screen
   if (isLoading) {
@@ -235,28 +259,7 @@ function SafelyAppContent() {
     );
   }
 
-  // Animated styles - must be declared before any conditional rendering
-  const entranceTitleStyle = useAnimatedStyle(() => ({
-    opacity: entranceTitleAnim.value,
-    transform: [
-      { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
-    ]
-  }));
 
-  const entranceBackgroundStyle = useAnimatedStyle(() => ({
-    transform: [
-      { 
-        rotate: `${interpolate(entranceBackgroundAnim.value, [0, 1], [0, 360], Extrapolate.CLAMP)}deg` 
-      },
-      { 
-        translateX: interpolate(entranceBackgroundAnim.value, [0, 1], [0, 100], Extrapolate.CLAMP) 
-      }
-    ]
-  }));
-
-  const entranceTransitionStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(entranceAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
-  }));
 
   // Show entrance screen
   if (showEntrance) {
