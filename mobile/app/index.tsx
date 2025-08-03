@@ -170,17 +170,12 @@ export default function SafelyApp() {
       <View style={styles.backgroundContainer}>
         <Animated.View style={[styles.backgroundOrb, backgroundStyle]}>
           <LinearGradient
-            colors={['rgba(94, 106, 210, 0.1)', 'rgba(124, 58, 237, 0.05)'] as any}
+            colors={['rgba(239, 68, 68, 0.08)', 'rgba(220, 38, 38, 0.05)'] as any}
             style={styles.orbGradient}
           />
         </Animated.View>
         
-        {/* Grid pattern */}
-        <View style={styles.gridPattern}>
-          {Array.from({ length: 20 }).map((_, i) => (
-            <View key={i} style={[styles.gridLine, { opacity: 0.03 }]} />
-          ))}
-        </View>
+
       </View>
 
       {/* Progress Bar */}
@@ -406,7 +401,7 @@ function MainApp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D1117',
+    backgroundColor: '#FFFFFF',
   },
   backgroundContainer: {
     position: 'absolute',
@@ -435,12 +430,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  gridLine: {
-    position: 'absolute',
-    backgroundColor: '#fff',
-    width: 1,
-    height: '100%',
-  },
+
   progressContainer: {
     paddingHorizontal: 24,
     paddingTop: 20,
@@ -454,7 +444,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#5E6AD2',
+    backgroundColor: '#EF4444',
     borderRadius: 1,
   },
   scrollView: {
@@ -478,7 +468,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.5,
@@ -487,7 +477,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(0, 0, 0, 0.8)',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 26,
@@ -495,7 +485,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     fontWeight: '400',
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(0, 0, 0, 0.6)',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -528,9 +518,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   buttonText: {
     fontSize: 16,
@@ -540,7 +530,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   secondaryButtonText: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(0, 0, 0, 0.8)',
   },
   buttonIcon: {
     marginLeft: 8,
@@ -558,13 +548,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     letterSpacing: -0.5,
   },
   settingsButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   mainContent: {
     flex: 1,
@@ -580,7 +570,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -593,7 +583,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(0, 0, 0, 0.8)',
   },
   visualizerContainer: {
     marginBottom: 40,
@@ -606,7 +596,7 @@ const styles = StyleSheet.create({
   },
   audioBar: {
     width: 4,
-    backgroundColor: '#5E6AD2',
+    backgroundColor: '#EF4444',
     borderRadius: 2,
     minHeight: 4,
   },
@@ -617,7 +607,7 @@ const styles = StyleSheet.create({
   soundsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(0, 0, 0, 0.8)',
     marginBottom: 16,
   },
   soundItem: {
@@ -628,11 +618,11 @@ const styles = StyleSheet.create({
   },
   soundText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(0, 0, 0, 0.6)',
   },
   noSoundsText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: 'rgba(0, 0, 0, 0.4)',
     fontStyle: 'italic',
   },
   alertContainer: {
