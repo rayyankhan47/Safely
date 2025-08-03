@@ -464,8 +464,8 @@ function SafelyAppContent() {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Continue as John button - only show on last step */}
-          {currentStep === steps.length - 1 && (
+          {/* Continue as John button - show on first step */}
+          {currentStep === 0 && (
             <Animated.View style={[styles.mockUserContainer, buttonsStyle]}>
               <TouchableOpacity 
                 style={[styles.button, styles.mockUserButton]} 
