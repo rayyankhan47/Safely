@@ -63,7 +63,10 @@ This will create:
 3. Get Google OAuth credentials:
    - Go to [Google Cloud Console](https://console.cloud.google.com)
    - Create a new project or select existing
-   - Enable Google+ API
+   - **Enable Google Identity Platform** (or Google Sign-In API):
+     - Go to **APIs & Services** → **Library**
+     - Search for "Google Identity Platform" or "Google Sign-In API"
+     - Click and **Enable**
    - Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client IDs**
    - Set application type to "Web application"
    - Add authorized redirect URIs:

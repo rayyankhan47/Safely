@@ -3,10 +3,10 @@
 
 export const SUPABASE_CONFIG = {
   // Your Supabase project URL
-  url: 'https://your-project-id.supabase.co',
+  url: 'https://qzerdcycwksundhjjbsn.supabase.co',
   
   // Your Supabase anon/public key
-  anonKey: 'your-anon-key-here',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZXJkY3ljd2tzdW5kaGpqYnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxOTk3MjAsImV4cCI6MjA2OTc3NTcyMH0.phc-4lTEB-7CLkmQQZQ31yxUWQ0s4m3rux7EHWD9HOs',
   
   // Optional: Service role key for admin operations (keep secret!)
   serviceRoleKey: 'your-service-role-key-here',
