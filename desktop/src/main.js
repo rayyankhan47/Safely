@@ -11,7 +11,7 @@ if (require('electron-squirrel-startup')) {
 let mainWindow;
 let discoverySocket;
 let discoveredDevices = new Map(); // deviceId -> deviceInfo
-const DISCOVERY_PORT = 41234;
+const DISCOVERY_PORT = 8888;
 const DISCOVERY_MESSAGE = 'SAFELY_DISCOVERY';
 
 const createWindow = () => {
