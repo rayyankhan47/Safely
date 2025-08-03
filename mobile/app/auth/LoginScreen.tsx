@@ -110,7 +110,7 @@ export default function LoginScreen({ onLogin, onGoogleLogin, onSignUp, onForgot
           <View style={styles.buttons}>
             <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
               <LinearGradient
-                colors={['#EF4444', '#DC2626']}
+                colors={['#60A5FA', '#3B82F6']}
                 style={styles.primaryButtonGradient}
               >
                 <Text style={styles.primaryButtonText}>Sign In</Text>
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#EF4444',
+    color: '#60A5FA',
   },
   buttons: {
     marginBottom: 24,
@@ -292,6 +292,6 @@ const styles = StyleSheet.create({
   signUpLinkText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#EF4444',
+    color: '#60A5FA',
   },
 }); 

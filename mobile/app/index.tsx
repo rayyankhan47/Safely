@@ -49,21 +49,21 @@ function SafelyAppContent() {
       subtitle: "For anxiety, sensory sensitivity, and peace of mind",
       description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Immerse yourself without fear of missing critical sounds.",
       icon: "shield-checkmark",
-      gradient: ["#EF4444", "#DC2626"]
+      gradient: ["#60A5FA", "#3B82F6"]
     },
     {
       title: "Freedom to Focus",
       subtitle: "Break free from obsessive worry",
       description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the freedom to concentrate.",
       icon: "ear",
-      gradient: ["#EF4444", "#DC2626"]
+      gradient: ["#60A5FA", "#3B82F6"]
     },
     {
       title: "Your Safety, Your Privacy",
       subtitle: "Complete control and peace of mind",
       description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to focus while staying aware of what matters.",
       icon: "lock-closed",
-      gradient: ["#EF4444", "#DC2626"]
+      gradient: ["#60A5FA", "#3B82F6"]
     }
   ];
 
@@ -248,7 +248,7 @@ function SafelyAppContent() {
       <View style={styles.backgroundContainer}>
         <Animated.View style={[styles.backgroundOrb, backgroundStyle]}>
           <LinearGradient
-            colors={['rgba(239, 68, 68, 0.08)', 'rgba(220, 38, 38, 0.05)'] as any}
+            colors={['rgba(96, 165, 250, 0.08)', 'rgba(59, 130, 246, 0.05)'] as any}
             style={styles.orbGradient}
           />
         </Animated.View>
@@ -370,10 +370,10 @@ function MainApp() {
   
   const getAlertColor = () => {
     switch (alertLevel) {
-      case 'low': return '#F59E0B';
-      case 'medium': return '#F97316';
-      case 'high': return '#EF4444';
-      default: return '#5E6AD2';
+      case 'low': return '#60A5FA';
+      case 'medium': return '#3B82F6';
+      case 'high': return '#1D4ED8';
+      default: return '#60A5FA';
     }
   };
   
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#EF4444',
+    backgroundColor: '#60A5FA',
     borderRadius: 1,
   },
   scrollView: {
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   },
   audioBar: {
     width: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#60A5FA',
     borderRadius: 2,
     minHeight: 4,
   },
