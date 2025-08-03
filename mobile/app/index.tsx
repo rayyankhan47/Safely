@@ -34,6 +34,7 @@ function SafelyAppContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
+  const [showEntrance, setShowEntrance] = useState(true);
   
   // Animation values - always declare these
   const titleAnim = useSharedValue(0);
@@ -42,6 +43,9 @@ function SafelyAppContent() {
   const buttonsAnim = useSharedValue(0);
   const progressAnim = useSharedValue(0);
   const backgroundAnim = useSharedValue(0);
+  const entranceAnim = useSharedValue(0);
+  const entranceTitleAnim = useSharedValue(0);
+  const entranceBackgroundAnim = useSharedValue(0);
 
   const steps = [
     {
@@ -68,28 +72,46 @@ function SafelyAppContent() {
   ];
 
   useEffect(() => {
-    // Simple staggered fade-in animation
-    titleAnim.value = withTiming(1, { duration: 800 });
-    
-    setTimeout(() => {
-      subtitleAnim.value = withTiming(1, { duration: 600 });
-    }, 400);
-    
-    setTimeout(() => {
-      descriptionAnim.value = withTiming(1, { duration: 600 });
-    }, 800);
-    
-    setTimeout(() => {
-      buttonsAnim.value = withTiming(1, { duration: 600 });
-    }, 1200);
-    
-    // Background animation
-    backgroundAnim.value = withRepeat(
-      withTiming(1, { duration: 8000 }),
-      -1,
-      true
-    );
-  }, []);
+    // Entrance animation sequence
+    if (showEntrance) {
+      // Start entrance animations
+      entranceTitleAnim.value = withTiming(1, { duration: 1000 });
+      entranceBackgroundAnim.value = withRepeat(
+        withTiming(1, { duration: 30000 }),
+        -1,
+        true
+      );
+      
+      // After 3 seconds, transition to main app
+      setTimeout(() => {
+        entranceAnim.value = withTiming(1, { duration: 1500 });
+        setTimeout(() => {
+          setShowEntrance(false);
+          // Start main app animations
+          titleAnim.value = withTiming(1, { duration: 800 });
+          
+          setTimeout(() => {
+            subtitleAnim.value = withTiming(1, { duration: 600 });
+          }, 400);
+          
+          setTimeout(() => {
+            descriptionAnim.value = withTiming(1, { duration: 600 });
+          }, 800);
+          
+          setTimeout(() => {
+            buttonsAnim.value = withTiming(1, { duration: 600 });
+          }, 1200);
+        }, 1500);
+      }, 3000);
+    } else {
+      // Background animation for main app
+      backgroundAnim.value = withRepeat(
+        withTiming(1, { duration: 8000 }),
+        -1,
+        true
+      );
+    }
+  }, [showEntrance]);
 
   useEffect(() => {
     // Update progress animation
@@ -208,6 +230,66 @@ function SafelyAppContent() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show entrance screen
+  if (showEntrance) {
+    const entranceTitleStyle = useAnimatedStyle(() => ({
+      opacity: entranceTitleAnim.value,
+      transform: [
+        { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
+      ]
+    }));
+
+    const entranceBackgroundStyle = useAnimatedStyle(() => ({
+      transform: [
+        { 
+          rotate: `${interpolate(entranceBackgroundAnim.value, [0, 1], [0, 360], Extrapolate.CLAMP)}deg` 
+        },
+        { 
+          translateX: interpolate(entranceBackgroundAnim.value, [0, 1], [0, 100], Extrapolate.CLAMP) 
+        }
+      ]
+    }));
+
+    const entranceTransitionStyle = useAnimatedStyle(() => ({
+      opacity: interpolate(entranceAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
+    }));
+
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B1426" />
+        
+        {/* Aurora-like background */}
+        <Animated.View style={[styles.entranceBackground, entranceBackgroundStyle, entranceTransitionStyle]}>
+          <LinearGradient
+            colors={['#0B1426', '#1E3A8A', '#3B82F6', '#60A5FA', '#93C5FD'] as any}
+            style={styles.auroraGradient1}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <LinearGradient
+            colors={['#1E40AF', '#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE'] as any}
+            style={styles.auroraGradient2}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          />
+          <LinearGradient
+            colors={['#1E3A8A', '#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE'] as any}
+            style={styles.auroraGradient3}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+        </Animated.View>
+        
+        {/* Centered Safely title */}
+        <View style={styles.entranceContent}>
+          <Animated.Text style={[styles.entranceTitle, entranceTitleStyle]}>
+            Safely
+          </Animated.Text>
         </View>
       </SafeAreaView>
     );
@@ -747,6 +829,54 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#000000',
+  },
+  
+  // Entrance Screen Styles
+  entranceBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  auroraGradient1: {
+    position: 'absolute',
+    top: -200,
+    left: -200,
+    right: -200,
+    bottom: -200,
+    borderRadius: 1000,
+  },
+  auroraGradient2: {
+    position: 'absolute',
+    top: -300,
+    left: -300,
+    right: -300,
+    bottom: -300,
+    borderRadius: 1200,
+  },
+  auroraGradient3: {
+    position: 'absolute',
+    top: -400,
+    left: -400,
+    right: -400,
+    bottom: -400,
+    borderRadius: 1400,
+  },
+  entranceContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  entranceTitle: {
+    fontSize: 72,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: -1,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
 
