@@ -235,8 +235,8 @@ export default function SafelyApp() {
                 />
               </LinearGradient>
             </TouchableOpacity>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
