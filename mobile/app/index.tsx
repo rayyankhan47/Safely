@@ -128,7 +128,7 @@ export default function SafelyApp() {
         translateY: interpolate(
           titleAnim.value, 
           [0, 1], 
-          [height / 2 - 100, 0], // Start centered, move to top
+          [height / 2 - 50, -50], // Start perfectly centered, move to top
           Extrapolate.CLAMP
         ) 
       },
@@ -136,7 +136,7 @@ export default function SafelyApp() {
         scale: interpolate(
           titleAnim.value,
           [0, 1],
-          [1.5, 1], // Start big, scale down to normal
+          [2.5, 1], // Start much bigger, scale down to normal
           Extrapolate.CLAMP
         )
       }
@@ -346,13 +346,13 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   title: {
-    fontSize: 48,
+    fontSize: 64,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.5,
-    lineHeight: 56,
+    lineHeight: 72,
   },
   subtitle: {
     fontSize: 18,
