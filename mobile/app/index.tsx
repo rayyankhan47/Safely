@@ -68,9 +68,12 @@ export default function SafelyScreen() {
     
     // Listen for discovery requests and connection codes
     discoverySocket.on('message', (msg, rinfo) => {
+      console.log(`Mobile received UDP message from ${rinfo.address}:${rinfo.port}`);
+      console.log('Raw message:', msg.toString());
+      
       try {
         const data = JSON.parse(msg.toString());
-        console.log('Received UDP message:', data, 'from:', rinfo.address);
+        console.log('Parsed message:', data);
         
         if (data.type === 'discovery-request') {
           // Desktop is looking for devices, respond with broadcast
@@ -80,8 +83,12 @@ export default function SafelyScreen() {
             timestamp: Date.now()
           };
           
-          discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, rinfo.address);
-          console.log('Responded to discovery request from:', rinfo.address);
+          try {
+            discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, rinfo.address);
+            console.log('Responded to discovery request from:', rinfo.address);
+          } catch (error) {
+            console.error('Error responding to discovery request:', error);
+          }
         } else if (data.type === 'connection-request') {
           // Desktop sent connection code
           setReceivedCode(data.connectionCode);

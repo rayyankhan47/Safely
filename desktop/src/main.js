@@ -92,7 +92,12 @@ const startDeviceDiscovery = () => {
       timestamp: Date.now()
     });
     
-    discoverySocket.send(message, DISCOVERY_PORT, '255.255.255.255');
+    try {
+      discoverySocket.send(message, DISCOVERY_PORT, '255.255.255.255');
+      console.log('Sent discovery request to 255.255.255.255');
+    } catch (error) {
+      console.error('Error sending discovery request:', error);
+    }
   };
 
   // Start listening
@@ -100,6 +105,7 @@ const startDeviceDiscovery = () => {
     discoverySocket.setBroadcast(true);
     console.log(`Device discovery started on port ${DISCOVERY_PORT}`);
     console.log(`Local IP: ${getLocalIP()}`);
+    console.log('Waiting for mobile devices to broadcast...');
     
     // Broadcast discovery request every 5 seconds
     broadcastDiscovery();
