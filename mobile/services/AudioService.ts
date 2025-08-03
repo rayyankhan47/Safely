@@ -99,7 +99,9 @@ class AudioService {
       this.isRecording = true;
       this.onSoundDetected = onSoundDetected;
 
-      console.log('Audio recording started successfully');
+      console.log('🎤 Audio recording started successfully');
+      console.log('🎤 Recording object:', recording);
+      console.log('🎤 Status update callback registered');
       return true;
 
     } catch (error) {
@@ -131,6 +133,15 @@ class AudioService {
   private onRecordingStatusUpdate = (status: Audio.RecordingStatus) => {
     if (!status.isRecording || !this.onSoundDetected) return;
 
+    // Debug: Log recording status occasionally
+    if (Math.random() > 0.9) { // 10% chance to log
+      console.log('🎤 Recording status:', {
+        isRecording: status.isRecording,
+        durationMillis: status.durationMillis,
+        metering: status.metering
+      });
+    }
+
     // TODO: Process audio data with YAMNet here
     // For now, simulate sound detection
     this.simulateSoundDetection();
@@ -152,9 +163,11 @@ class AudioService {
       { type: 'glass_breaking', confidence: 0.9, isCritical: true },
     ];
 
-    // Randomly detect sounds (simulate real detection)
-    if (Math.random() > 0.95) { // 5% chance per update
+    // More frequent detection for testing (30% chance per update)
+    if (Math.random() > 0.7) { // 30% chance per update
       const sound = sounds[Math.floor(Math.random() * sounds.length)];
+      
+      console.log('🎵 Sound detected:', sound.type, 'Confidence:', sound.confidence, 'Critical:', sound.isCritical);
       
       this.onSoundDetected({
         timestamp: Date.now(),
