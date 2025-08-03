@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Device from 'expo-device';
-import { generateConnectionCode } from '../../../shared/utils.js';
+import { generateConnectionCode } from '../utils.js';
 
 export default function SafelyScreen() {
   const [step, setStep] = useState(1);
@@ -10,6 +10,9 @@ export default function SafelyScreen() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [ws, setWs] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [desktopCode, setDesktopCode] = useState('');
 
   // Generate connection code and get device info on mount
   useEffect(() => {
@@ -40,19 +43,64 @@ export default function SafelyScreen() {
     }
   };
 
+  const connectToDesktop = () => {
+    try {
+      // For now, we'll simulate WebSocket connection
+      // In a real implementation, you'd use a WebSocket library
+      console.log('Connecting to desktop WebSocket server...');
+      
+      // Simulate connection process
+      setTimeout(() => {
+        setWsConnected(true);
+        setConnectionStatus('connected');
+        
+        // Simulate sending connection code to desktop
+        console.log('Sending connection code to desktop:', connectionCode);
+        
+        // Simulate receiving connection acceptance
+        setTimeout(() => {
+          console.log('Connection accepted by desktop');
+        }, 1000);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('WebSocket connection error:', error);
+      Alert.alert('Connection Error', 'Failed to connect to desktop app. Make sure both devices are on the same network.');
+    }
+  };
+
   const handleConnect = async () => {
     const permissionGranted = await requestMicrophonePermission();
     if (!permissionGranted) return;
 
     setConnectionStatus('connecting');
-    // Simulate connection process
-    setTimeout(() => {
-      setConnectionStatus('connected');
-    }, 2000);
+    connectToDesktop();
   };
 
   const handleDisconnect = () => {
+    if (ws) {
+      ws.close();
+    }
     setConnectionStatus('disconnected');
+    setWsConnected(false);
+    setWs(null);
+  };
+
+  const simulateSoundDetection = () => {
+    if (wsConnected) {
+      // Simulate detecting a sound
+      const soundData = {
+        type: 'sound-detected',
+        sound: 'Screaming',
+        timestamp: new Date().toISOString(),
+        confidence: 0.85
+      };
+      
+      console.log('Sending sound alert to desktop:', soundData);
+      
+      // In real implementation, this would be sent via WebSocket
+      Alert.alert('Sound Detected!', 'Screaming detected - alert sent to desktop');
+    }
   };
 
   // Step 1: Welcome
@@ -139,6 +187,11 @@ export default function SafelyScreen() {
             <Text style={styles.description}>
               Listening for sounds...
             </Text>
+            
+            {/* Test button for sound detection */}
+            <TouchableOpacity style={styles.testButton} onPress={simulateSoundDetection}>
+              <Text style={styles.testButtonText}>Test Sound Detection</Text>
+            </TouchableOpacity>
             
             <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
               <Text style={styles.disconnectButtonText}>Disconnect</Text>
@@ -237,6 +290,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
+  testButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  testButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   disconnectButton: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -244,7 +310,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 32,
+    marginTop: 16,
   },
   disconnectButtonText: {
     color: '#666',

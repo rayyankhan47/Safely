@@ -36,7 +36,8 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected
   const [connectedDevice, setConnectedDevice] = useState('');
   const [detectedSounds, setDetectedSounds] = useState([]);
-  const wsRef = useRef(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const { ipcRenderer } = window.require('electron');
 
   // Generate connection code on component mount
   useEffect(() => {
@@ -51,33 +52,81 @@ function App() {
     setConnectionCode(generateCode());
   }, []);
 
-  // WebSocket server setup
+  // Set up IPC listeners for WebSocket communication
   useEffect(() => {
-    if (connectionStatus === 'disconnected') {
-      // Start WebSocket server when ready to connect
-      startWebSocketServer();
-    }
-  }, [connectionStatus]);
-
-  const startWebSocketServer = () => {
-    // For now, simulate WebSocket server
-    // In real implementation, this would be a proper WebSocket server
-    console.log('WebSocket server ready for mobile connection');
-  };
-
-  const handleConnect = () => {
-    setConnectionStatus('connecting');
-    // Simulate connection process
-    setTimeout(() => {
+    // Mobile connected
+    ipcRenderer.on('mobile-connected', (event, data) => {
+      console.log('Mobile connected:', data);
+      setWsConnected(true);
       setConnectionStatus('connected');
-      setConnectedDevice("Rayyan's iPhone 14 Pro");
-    }, 2000);
+      setConnectedDevice(data.deviceInfo || 'Mobile Device');
+    });
+
+    // Mobile disconnected
+    ipcRenderer.on('mobile-disconnected', () => {
+      console.log('Mobile disconnected');
+      setWsConnected(false);
+      setConnectionStatus('disconnected');
+      setConnectedDevice('');
+    });
+
+    // Mobile trying to connect with code
+    ipcRenderer.on('mobile-connect-attempt', (event, data) => {
+      console.log('Mobile connect attempt:', data);
+      if (data.code === connectionCode) {
+        // Code matches! Accept connection
+        ipcRenderer.invoke('send-to-mobile', {
+          type: 'connect-accepted',
+          code: connectionCode
+        });
+        setConnectionStatus('connected');
+        setConnectedDevice(data.deviceInfo || 'Mobile Device');
+      } else {
+        // Code doesn't match
+        ipcRenderer.invoke('send-to-mobile', {
+          type: 'connect-rejected',
+          reason: 'Invalid connection code'
+        });
+      }
+    });
+
+    // Sound alert from mobile
+    ipcRenderer.on('sound-alert', (event, data) => {
+      console.log('Sound alert:', data);
+      setDetectedSounds(prev => [...prev, `${data.sound} detected at ${new Date().toLocaleTimeString()}`]);
+      
+      // Show system notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Safely Alert', {
+          body: `${data.sound} detected nearby`,
+          icon: '/path/to/icon.png'
+        });
+      }
+      
+      // Play alert sound
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+      audio.play();
+    });
+
+    return () => {
+      ipcRenderer.removeAllListeners('mobile-connected');
+      ipcRenderer.removeAllListeners('mobile-disconnected');
+      ipcRenderer.removeAllListeners('mobile-connect-attempt');
+      ipcRenderer.removeAllListeners('sound-alert');
+    };
+  }, [connectionCode, ipcRenderer]);
+
+  const handleConnect = async () => {
+    setConnectionStatus('connecting');
+    // The connection will be handled by the WebSocket server
+    // when the mobile app connects with the correct code
   };
 
   const handleDisconnect = () => {
     setConnectionStatus('disconnected');
     setConnectedDevice('');
     setDetectedSounds([]);
+    setWsConnected(false);
   };
 
   // Step 1: Welcome
@@ -147,6 +196,9 @@ function App() {
             <p style={{ color: '#888', fontSize: 14, marginBottom: 24 }}>
               Make sure both devices are on the same WiFi network
             </p>
+            <p style={{ color: '#0a0', fontSize: 14, marginBottom: 24 }}>
+              ● WebSocket server running on port 8080
+            </p>
             <button 
               onClick={handleConnect}
               style={{ padding: '12px 32px', fontSize: 18, borderRadius: 8, border: 'none', background: '#111', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
@@ -192,7 +244,7 @@ function App() {
               <div style={{ marginTop: 24, textAlign: 'left', width: '100%' }}>
                 <b style={{ color: '#111' }}>Recently detected:</b>
                 <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'disc inside', color: '#666' }}>
-                  {detectedSounds.map((sound, index) => (
+                  {detectedSounds.slice(-5).map((sound, index) => (
                     <li key={index}>{sound}</li>
                   ))}
                 </ul>
