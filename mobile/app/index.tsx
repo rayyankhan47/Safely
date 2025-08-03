@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform, TextInput } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Device from 'expo-device';
 import { generateConnectionCode } from '../utils.js';
-import dgram from 'react-native-udp';
 
 export default function SafelyScreen() {
   const [step, setStep] = useState(1);
@@ -11,24 +10,14 @@ export default function SafelyScreen() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
-  const [receivedCode, setReceivedCode] = useState('');
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const DISCOVERY_PORT = 8888;
-  const BROADCAST_ADDRESS = '255.255.255.255';
-  let discoverySocket = null;
+  const [desktopCode, setDesktopCode] = useState('');
+  const [desktopIP, setDesktopIP] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
 
   // Generate connection code and get device info on mount
   useEffect(() => {
     setConnectionCode(generateConnectionCode());
     getDeviceInfo();
-    
-    // Cleanup UDP socket on unmount
-    return () => {
-      if (discoverySocket) {
-        discoverySocket.close();
-        discoverySocket = null;
-      }
-    };
   }, []);
 
   const getDeviceInfo = async () => {
@@ -54,124 +43,68 @@ export default function SafelyScreen() {
     }
   };
 
-  const startBroadcasting = () => {
-    setIsBroadcasting(true);
-    console.log('Started broadcasting device presence...');
+  const connectToDesktop = async () => {
+    if (!desktopCode.trim()) {
+      Alert.alert('Error', 'Please enter the connection code');
+      return;
+    }
     
-    // Create UDP socket for broadcasting
-    discoverySocket = dgram.createSocket('udp4');
+    setIsConnecting(true);
+    console.log('Connecting to desktop with code:', desktopCode);
     
-    discoverySocket.on('error', (err) => {
-      console.error('UDP socket error:', err);
-      setIsBroadcasting(false);
-    });
-    
-    // Listen for discovery requests and connection codes
-    discoverySocket.on('message', (msg, rinfo) => {
-      console.log(`Mobile received UDP message from ${rinfo.address}:${rinfo.port}`);
-      console.log('Raw message:', msg.toString());
+    try {
+      // Try common local network IPs
+      const possibleIPs = ['192.168.1.100', '192.168.1.101', '10.0.0.100', '172.20.10.5'];
       
-      try {
-        const data = JSON.parse(msg.toString());
-        console.log('Parsed message:', data);
-        
-        if (data.type === 'discovery-request') {
-          console.log('Processing discovery request...');
-          // Desktop is looking for devices, respond with broadcast
-          const broadcastMessage = {
-            type: 'device-broadcast',
-            deviceInfo: deviceInfo,
-            timestamp: Date.now()
-          };
-          
-          console.log('Sending response:', broadcastMessage);
-          
-          try {
-            discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, rinfo.address);
-            console.log('Successfully responded to discovery request from:', rinfo.address);
-          } catch (error) {
-            console.error('Error responding to discovery request:', error);
-          }
-        } else if (data.type === 'connection-request') {
-          // Desktop sent connection code
-          setReceivedCode(data.connectionCode);
-          console.log('Received connection code:', data.connectionCode);
-        }
-      } catch (error) {
-        console.error('Error parsing UDP message:', error);
-      }
-    });
-    
-    // Start listening
-    discoverySocket.bind(DISCOVERY_PORT, () => {
-      discoverySocket.setBroadcast(true);
-      console.log(`UDP listening on port ${DISCOVERY_PORT}`);
-      console.log(`Broadcasting to: ${BROADCAST_ADDRESS}:${DISCOVERY_PORT}`);
-      
-      // Broadcast presence periodically
-      const broadcastPresence = () => {
-        const broadcastMessage = {
-          type: 'device-broadcast',
-          deviceInfo: deviceInfo,
-          timestamp: Date.now()
-        };
-        
+      for (const ip of possibleIPs) {
         try {
-          // Try broadcast first
-          discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, BROADCAST_ADDRESS);
-          console.log('Broadcasting presence...', broadcastMessage);
-          
-          // Also try sending to common local network addresses
-          const localAddresses = ['192.168.1.255', '10.0.0.255', '172.16.0.255'];
-          localAddresses.forEach(addr => {
-            try {
-              discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, addr);
-              console.log(`Also broadcasting to ${addr}`);
-            } catch (e) {
-              console.log(`Failed to broadcast to ${addr}:`, e.message);
-            }
+          const response = await fetch(`http://${ip}:3000/connect`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              connectionCode: desktopCode,
+              deviceInfo: deviceInfo,
+              timestamp: Date.now()
+            })
           });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log('Successfully connected to desktop!');
+            setConnectionStatus('connected');
+            setDesktopIP(ip);
+            Alert.alert('Connected!', 'Successfully connected to desktop app.');
+            return;
+          }
         } catch (error) {
-          console.error('Error broadcasting:', error);
+          console.log(`Failed to connect to ${ip}:`, error.message);
         }
-      };
+      }
       
-      // Broadcast immediately and every 3 seconds
-      broadcastPresence();
-      setInterval(broadcastPresence, 3000);
-    });
+      Alert.alert('Connection Failed', 'Could not find desktop app. Make sure both devices are on the same network and the desktop app is running.');
+    } catch (error) {
+      console.error('Connection error:', error);
+      Alert.alert('Error', 'Failed to connect to desktop app.');
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const handleConnect = async () => {
     const permissionGranted = await requestMicrophonePermission();
     if (!permissionGranted) return;
 
-    setConnectionStatus('connecting');
-    startBroadcasting();
+    setStep(3);
   };
 
   const handleDisconnect = () => {
     setConnectionStatus('disconnected');
-    setIsBroadcasting(false);
-    setReceivedCode('');
-    
-    // Close UDP socket
-    if (discoverySocket) {
-      discoverySocket.close();
-      discoverySocket = null;
-      console.log('UDP socket closed');
-    }
-  };
-
-  const confirmConnection = () => {
-    if (receivedCode === connectionCode) {
-      setConnectionStatus('connected');
-      Alert.alert('Connected!', 'Successfully connected to desktop app.');
-    } else {
-      Alert.alert('Code Mismatch', 'The connection code does not match. Please try again.');
-      setConnectionStatus('disconnected');
-      setReceivedCode('');
-    }
+    setDesktopCode('');
+    setDesktopIP('');
+    setIsConnecting(false);
   };
 
   const simulateSoundDetection = () => {
@@ -231,90 +164,75 @@ export default function SafelyScreen() {
     );
   }
 
-  // Step 3: Device Discovery Dashboard
+  // Step 3: Connect to Desktop
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         
         {connectionStatus === 'disconnected' && (
           <View>
-            <Text style={styles.title}>Waiting for Desktop</Text>
+            <Text style={styles.title}>Connect to Desktop</Text>
             <Text style={styles.description}>
-              Your phone is broadcasting its presence on the network.
+              Enter the connection code from your desktop app.
             </Text>
             
-            {isBroadcasting ? (
-              <View style={styles.broadcastingContainer}>
-                <Text style={styles.broadcastingText}>
-                  ● Broadcasting on port {DISCOVERY_PORT}
-                </Text>
-                <Text style={styles.broadcastingText}>
-                  Device: {deviceInfo?.name}'s {deviceInfo?.model}
-                </Text>
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.button} onPress={handleConnect}>
-                <Text style={styles.buttonText}>Start Broadcasting</Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Connection Code:</Text>
+              <TextInput
+                style={styles.input}
+                value={desktopCode}
+                onChangeText={setDesktopCode}
+                placeholder="Enter code (e.g., Z4A09VF3)"
+                placeholderTextColor="#999"
+                autoCapitalize="characters"
+                maxLength={8}
+              />
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.button, isConnecting && styles.buttonDisabled]} 
+              onPress={connectToDesktop}
+              disabled={isConnecting}
+            >
+              <Text style={styles.buttonText}>
+                {isConnecting ? 'Connecting...' : 'Connect to Desktop'}
+              </Text>
+            </TouchableOpacity>
             
             <Text style={styles.hint}>
-              Open Safely on your Mac and select this device from the list
+              Make sure both devices are on the same WiFi network
             </Text>
-          </View>
-        )}
-
-        {connectionStatus === 'connecting' && (
-          <View>
-            <Text style={styles.title}>Connection Request</Text>
-            
-            {receivedCode ? (
-              <View>
-                <Text style={styles.description}>
-                  Desktop app wants to connect with this code:
-                </Text>
-                <View style={styles.codeContainer}>
-                  <Text style={styles.connectionCode}>{receivedCode}</Text>
-                </View>
-                <Text style={styles.description}>
-                  Does this match the code shown on your Mac?
-                </Text>
-                
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity style={styles.confirmButton} onPress={confirmConnection}>
-                    <Text style={styles.confirmButtonText}>Yes, Connect</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.rejectButton} onPress={() => {
-                    setConnectionStatus('disconnected');
-                    setReceivedCode('');
-                  }}>
-                    <Text style={styles.rejectButtonText}>No, Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View>
-                <Text style={styles.description}>
-                  Waiting for connection code from desktop...
-                </Text>
-                <View style={styles.broadcastingContainer}>
-                  <Text style={styles.broadcastingText}>
-                    ● Broadcasting on port {DISCOVERY_PORT}
-                  </Text>
-                </View>
-              </View>
-            )}
           </View>
         )}
 
         {connectionStatus === 'connected' && (
           <View>
             <Text style={styles.title}>Connected!</Text>
-            <Text style={styles.connectedText}>
-              ● {deviceInfo?.name}'s {deviceInfo?.model} is connected!
-            </Text>
             <Text style={styles.description}>
-              Listening for sounds...
+              Your phone is now connected to the desktop app.
+            </Text>
+            
+            <View style={styles.connectedContainer}>
+              <Text style={styles.connectedText}>
+                ● Connected to desktop ({desktopIP})
+              </Text>
+              <Text style={styles.connectedText}>
+                ● Listening for sounds...
+              </Text>
+            </View>
+            
+            <TouchableOpacity style={styles.button} onPress={simulateSoundDetection}>
+              <Text style={styles.buttonText}>Test Sound Detection</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.button, styles.disconnectButton]} onPress={handleDisconnect}>
+              <Text style={styles.buttonText}>Disconnect</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </View>
+  );
             </Text>
             
             {/* Test button for sound detection */}
@@ -423,6 +341,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 16,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 2,
+    backgroundColor: '#fff',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonRow: {
     flexDirection: 'row',
