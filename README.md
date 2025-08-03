@@ -1,67 +1,124 @@
-# Safely - AI-Powered Ambient Sound Safety Alert System
+# Safely - AI-Powered Ambient Sound Safety Alert App
 
-Safely is a privacy-first, AI-powered system that monitors your environment through your phone and alerts you on your desktop when potentially dangerous or important sounds are detected.
+A beautiful, Linear-inspired mobile app that uses AI to detect dangerous sounds and keep you safe while wearing headphones.
 
-## Architecture
+## 🎯 Vision
 
-Safely consists of two main components:
+Safely is your personal safety companion that listens to your environment and alerts you to important sounds - from fire alarms to baby cries, from emergency announcements to breaking glass. Designed with the same beautiful, minimal aesthetic as Linear.app.
 
-- **Desktop App** (Electron): Receives alerts, controls media, shows notifications
-- **Mobile App** (React Native/Expo): Listens to environment, processes audio with YAMNet ML model
+## ✨ Features
 
-## Project Structure
+### Core Features
+- **Real-time sound detection** using YAMNet AI model
+- **Beautiful Linear-inspired UI** with smooth animations
+- **Customizable alerts** for different sound types
+- **Environment modes** (quiet, normal, sensitive)
+- **Live audio visualizer** with elegant animations
 
-```
-Safely/
-├── desktop/          # Electron desktop app
-├── mobile/           # React Native mobile app  
-├── shared/           # Shared utilities and constants
-└── README.md
-```
+### Premium Features
+- **Personalized sound models** trained for your environment
+- **Advanced analytics** and usage insights
+- **Family sharing** and emergency contacts
+- **Cross-device sync** with web dashboard
+- **Professional features** for healthcare workers
 
-## Features
+## 🎨 Design Philosophy
 
-- **Real-time sound detection** using YAMNet ML model
-- **Privacy-first**: All audio processing happens locally on your phone
-- **Simple pairing**: Connect devices with a simple 8-character code
-- **Media control**: Automatically pause music/videos when alerts are detected
-- **Customizable**: Choose which sounds to monitor
+Inspired by Linear.app's beautiful, minimal design:
+- Clean white backgrounds with subtle gradients
+- Smooth animations and micro-interactions
+- Beautiful typography and generous spacing
+- Elegant loading states and transitions
+- Haptic feedback for important actions
 
-## Development Setup
+## 🚀 Getting Started
 
-### Desktop App
-```bash
-cd desktop
-npm install
-npm start
-```
+### Prerequisites
+- Node.js 18+
+- Expo CLI
+- iOS Simulator or Android Emulator
 
-### Mobile App
+### Installation
 ```bash
 cd mobile
 npm install
 npm start
 ```
 
-## Connection Flow
+### Development
+- Press `i` for iOS Simulator
+- Press `a` for Android Emulator
+- Scan QR code for physical device
 
-1. Desktop app generates a connection code
-2. Mobile app enters the same code
-3. Devices connect via WebSocket
-4. Mobile app listens for sounds and sends alerts to desktop
-5. Desktop app shows notifications and controls media
+## 🏗️ Architecture
 
-## Privacy
+### Mobile App (React Native + Expo)
+- **Frontend**: React Native with Expo
+- **AI Model**: YAMNet (TensorFlow.js)
+- **Animations**: React Native Reanimated
+- **UI Components**: Custom Linear-inspired components
+- **State Management**: React Context + AsyncStorage
 
-- All audio processing happens locally on your phone
-- No audio is recorded or transmitted
-- No data is sent to external servers
-- Microphone access is only active when the app is running
+### Backend (Future)
+- **Authentication**: Supabase Auth
+- **Database**: Supabase PostgreSQL
+- **Real-time**: Supabase Realtime
+- **Analytics**: Custom analytics system
 
-## Tech Stack
+## 📱 Screens
 
-- **Desktop**: Electron + React
-- **Mobile**: React Native + Expo
-- **ML Model**: YAMNet (TensorFlow.js)
-- **Communication**: WebSocket
-- **Audio Processing**: Web Audio API 
+1. **Onboarding** - Beautiful welcome flow
+2. **Sign In/Sign Up** - Clean authentication
+3. **Dashboard** - Main app interface
+4. **Settings** - Customization options
+5. **Analytics** - Usage insights
+6. **Profile** - User management
+
+## 🎯 Roadmap
+
+### Phase 1: Core App
+- [x] Project setup and structure
+- [ ] Linear-inspired UI components
+- [ ] Beautiful onboarding flow
+- [ ] YAMNet integration
+- [ ] Basic sound detection
+
+### Phase 2: Premium Features
+- [ ] User authentication
+- [ ] Settings and customization
+- [ ] Analytics dashboard
+- [ ] Family sharing
+
+### Phase 3: Advanced Features
+- [ ] Web dashboard
+- [ ] Professional features
+- [ ] Advanced analytics
+- [ ] Community features
+
+## 🎨 Design System
+
+### Colors
+- **Primary**: #111827 (Linear's dark gray)
+- **Secondary**: #6B7280 (Medium gray)
+- **Accent**: #3B82F6 (Blue)
+- **Success**: #10B981 (Green)
+- **Warning**: #F59E0B (Yellow)
+- **Error**: #EF4444 (Red)
+
+### Typography
+- **Font Family**: Inter
+- **Weights**: 400, 500, 600, 700
+- **Sizes**: 12px, 14px, 16px, 18px, 24px, 32px
+
+### Spacing
+- **Base Unit**: 4px
+- **Padding**: 16px, 24px, 32px
+- **Margins**: 8px, 16px, 24px, 32px
+
+## 🤝 Contributing
+
+This is a hackathon project focused on creating a beautiful, functional mobile app with Linear-inspired design.
+
+## 📄 License
+
+MIT License - feel free to use this project for learning and inspiration! 
