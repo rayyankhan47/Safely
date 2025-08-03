@@ -235,30 +235,31 @@ function SafelyAppContent() {
     );
   }
 
+  // Animated styles - must be declared before any conditional rendering
+  const entranceTitleStyle = useAnimatedStyle(() => ({
+    opacity: entranceTitleAnim.value,
+    transform: [
+      { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const entranceBackgroundStyle = useAnimatedStyle(() => ({
+    transform: [
+      { 
+        rotate: `${interpolate(entranceBackgroundAnim.value, [0, 1], [0, 360], Extrapolate.CLAMP)}deg` 
+      },
+      { 
+        translateX: interpolate(entranceBackgroundAnim.value, [0, 1], [0, 100], Extrapolate.CLAMP) 
+      }
+    ]
+  }));
+
+  const entranceTransitionStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(entranceAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
+  }));
+
   // Show entrance screen
   if (showEntrance) {
-    const entranceTitleStyle = useAnimatedStyle(() => ({
-      opacity: entranceTitleAnim.value,
-      transform: [
-        { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
-      ]
-    }));
-
-    const entranceBackgroundStyle = useAnimatedStyle(() => ({
-      transform: [
-        { 
-          rotate: `${interpolate(entranceBackgroundAnim.value, [0, 1], [0, 360], Extrapolate.CLAMP)}deg` 
-        },
-        { 
-          translateX: interpolate(entranceBackgroundAnim.value, [0, 1], [0, 100], Extrapolate.CLAMP) 
-        }
-      ]
-    }));
-
-    const entranceTransitionStyle = useAnimatedStyle(() => ({
-      opacity: interpolate(entranceAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
-    }));
-
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#0B1426" />
