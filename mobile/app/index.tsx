@@ -900,11 +900,12 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   persistentTitle: {
-    fontSize: 48,
+    fontSize: 72, // Match the entrance title size exactly
     fontWeight: '700',
-    color: '#000000',
+    color: '#000000', // Final color after transition
     textAlign: 'center',
     letterSpacing: -1,
+    // Remove text shadow to match final state
   },
 });
 
