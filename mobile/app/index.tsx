@@ -16,6 +16,7 @@ import Animated, {
   withSpring,
   withTiming,
   interpolate,
+  interpolateColor,
   Extrapolate,
   withRepeat,
   withSequence,
@@ -104,6 +105,28 @@ function SafelyAppContent() {
     opacity: entranceTitleAnim.value,
     transform: [
       { scale: interpolate(entranceTitleAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) }
+    ]
+  }));
+
+  const entranceTitleColorStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      entranceAnim.value,
+      [0, 1],
+      ['#FFFFFF', '#000000'],
+      'RGB'
+    ),
+  }));
+
+  const entranceTitlePositionStyle = useAnimatedStyle(() => ({
+    transform: [
+      { 
+        translateY: interpolate(
+          entranceAnim.value, 
+          [0, 1], 
+          [0, -height * 0.3], // Move from center to top
+          Extrapolate.CLAMP
+        ) 
+      }
     ]
   }));
 
@@ -291,7 +314,12 @@ function SafelyAppContent() {
         
         {/* Centered Safely title */}
         <View style={styles.entranceContent}>
-          <Animated.Text style={[styles.entranceTitle, entranceTitleStyle]}>
+          <Animated.Text style={[
+            styles.entranceTitle, 
+            entranceTitleStyle, 
+            entranceTitleColorStyle,
+            entranceTitlePositionStyle
+          ]}>
             Safely
           </Animated.Text>
         </View>
@@ -875,7 +903,6 @@ const styles = StyleSheet.create({
   entranceTitle: {
     fontSize: 72,
     fontWeight: '700',
-    color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: -1,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
