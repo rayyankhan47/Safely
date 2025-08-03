@@ -32,6 +32,7 @@ export default function SafelyApp() {
   
   // Animation values
   const titleAnim = useSharedValue(0);
+  const titlePositionAnim = useSharedValue(0); // Separate animation for positioning
   const subtitleAnim = useSharedValue(0);
   const descriptionAnim = useSharedValue(0);
   const buttonsAnim = useSharedValue(0);
@@ -69,7 +70,7 @@ export default function SafelyApp() {
     
     // 2. "Safely" stays for 0.8 seconds, then moves up over 1 second (800ms)
     setTimeout(() => {
-      titleAnim.value = withTiming(1, { duration: 1000 });
+      titlePositionAnim.value = withTiming(1, { duration: 1000 });
     }, 800);
     
     // 3. Subtitle appears as title reaches final position (2000ms)
@@ -126,15 +127,15 @@ export default function SafelyApp() {
     transform: [
       { 
         translateY: interpolate(
-          titleAnim.value, 
+          titlePositionAnim.value, 
           [0, 1], 
-          [height / 2 - 50, -50], // Start perfectly centered, move to top
+          [height / 2 - 100, 0], // Start perfectly centered, move to top
           Extrapolate.CLAMP
         ) 
       },
       {
         scale: interpolate(
-          titleAnim.value,
+          titlePositionAnim.value,
           [0, 1],
           [2.5, 1], // Start much bigger, scale down to normal
           Extrapolate.CLAMP
