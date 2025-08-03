@@ -343,15 +343,7 @@ function SafelyAppContent() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#FFFFFF" />
       
-      {/* Linear-style background with geometric elements */}
-      <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.backgroundOrb, backgroundStyle]}>
-          <LinearGradient
-            colors={['rgba(96, 165, 250, 0.08)', 'rgba(59, 130, 246, 0.05)'] as any}
-            style={styles.orbGradient}
-          />
-        </Animated.View>
-      </View>
+
 
       {/* Progress Bar */}
       <View style={styles.progressContainer}>
