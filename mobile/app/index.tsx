@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react
 import { Audio } from 'expo-av';
 import * as Device from 'expo-device';
 import { generateConnectionCode } from '../utils.js';
+import dgram from 'react-native-udp';
 
 export default function SafelyScreen() {
   const [step, setStep] = useState(1);
@@ -12,12 +13,22 @@ export default function SafelyScreen() {
   const [hasPermission, setHasPermission] = useState(false);
   const [receivedCode, setReceivedCode] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const DISCOVERY_PORT = 41234;
+  const DISCOVERY_PORT = 8888;
+  const BROADCAST_ADDRESS = '255.255.255.255';
+  let discoverySocket = null;
 
   // Generate connection code and get device info on mount
   useEffect(() => {
     setConnectionCode(generateConnectionCode());
     getDeviceInfo();
+    
+    // Cleanup UDP socket on unmount
+    return () => {
+      if (discoverySocket) {
+        discoverySocket.close();
+        discoverySocket = null;
+      }
+    };
   }, []);
 
   const getDeviceInfo = async () => {
@@ -47,23 +58,61 @@ export default function SafelyScreen() {
     setIsBroadcasting(true);
     console.log('Started broadcasting device presence...');
     
-    // In a real implementation, this would use react-native-udp
-    // For now, we'll simulate the broadcasting
-    const broadcastMessage = {
-      type: 'device-broadcast',
-      deviceInfo: deviceInfo,
-      timestamp: Date.now()
-    };
+    // Create UDP socket for broadcasting
+    discoverySocket = dgram.createSocket('udp4');
     
-    console.log('Broadcasting:', broadcastMessage);
+    discoverySocket.on('error', (err) => {
+      console.error('UDP socket error:', err);
+      setIsBroadcasting(false);
+    });
     
-    // Simulate receiving connection requests
-    setTimeout(() => {
-      // Simulate receiving a connection code from desktop
-      const simulatedReceivedCode = connectionCode; // In real app, this would come from desktop
-      setReceivedCode(simulatedReceivedCode);
-      console.log('Received connection code:', simulatedReceivedCode);
-    }, 3000);
+    // Listen for discovery requests and connection codes
+    discoverySocket.on('message', (msg, rinfo) => {
+      try {
+        const data = JSON.parse(msg.toString());
+        console.log('Received UDP message:', data, 'from:', rinfo.address);
+        
+        if (data.type === 'discovery-request') {
+          // Desktop is looking for devices, respond with broadcast
+          const broadcastMessage = {
+            type: 'device-broadcast',
+            deviceInfo: deviceInfo,
+            timestamp: Date.now()
+          };
+          
+          discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, rinfo.address);
+          console.log('Responded to discovery request from:', rinfo.address);
+        } else if (data.type === 'connection-request') {
+          // Desktop sent connection code
+          setReceivedCode(data.connectionCode);
+          console.log('Received connection code:', data.connectionCode);
+        }
+      } catch (error) {
+        console.error('Error parsing UDP message:', error);
+      }
+    });
+    
+    // Start listening
+    discoverySocket.bind(DISCOVERY_PORT, () => {
+      discoverySocket.setBroadcast(true);
+      console.log(`UDP listening on port ${DISCOVERY_PORT}`);
+      
+      // Broadcast presence periodically
+      const broadcastPresence = () => {
+        const broadcastMessage = {
+          type: 'device-broadcast',
+          deviceInfo: deviceInfo,
+          timestamp: Date.now()
+        };
+        
+        discoverySocket.send(JSON.stringify(broadcastMessage), DISCOVERY_PORT, BROADCAST_ADDRESS);
+        console.log('Broadcasting presence...');
+      };
+      
+      // Broadcast immediately and every 3 seconds
+      broadcastPresence();
+      setInterval(broadcastPresence, 3000);
+    });
   };
 
   const handleConnect = async () => {
@@ -78,6 +127,13 @@ export default function SafelyScreen() {
     setConnectionStatus('disconnected');
     setIsBroadcasting(false);
     setReceivedCode('');
+    
+    // Close UDP socket
+    if (discoverySocket) {
+      discoverySocket.close();
+      discoverySocket = null;
+      console.log('UDP socket closed');
+    }
   };
 
   const confirmConnection = () => {
