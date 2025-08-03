@@ -2,11 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuestionnaireData } from '../components/Questionnaire';
 
-// Initialize Supabase client
-const supabaseUrl = 'https://your-project.supabase.co'; // TODO: Replace with actual URL
-const supabaseAnonKey = 'your-anon-key'; // TODO: Replace with actual key
+import { SUPABASE_CONFIG, OAUTH_CONFIG, TABLES } from '../config/supabase';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Initialize Supabase client
+export const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -98,7 +97,7 @@ class DatabaseService {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'safely://auth/callback',
+          redirectTo: OAUTH_CONFIG.redirectUrl,
         }
       });
 
@@ -158,7 +157,7 @@ class DatabaseService {
   async createUserProfile(userId: string, email: string, firstName: string, lastName: string): Promise<{ profile: UserProfile | null; error: AuthError | null }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from(TABLES.USER_PROFILES)
         .insert([
           {
             id: userId,
@@ -191,7 +190,7 @@ class DatabaseService {
   async getUserProfile(userId: string): Promise<{ profile: UserProfile | null; error: AuthError | null }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from(TABLES.USER_PROFILES)
         .select('*')
         .eq('id', userId)
         .single();
@@ -215,7 +214,7 @@ class DatabaseService {
   async updateUserPreferences(userId: string, preferences: QuestionnaireData): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from(TABLES.USER_PROFILES)
         .update({ 
           preferences,
           updated_at: new Date().toISOString()
@@ -240,7 +239,7 @@ class DatabaseService {
   async updateLastActive(userId: string): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from(TABLES.USER_PROFILES)
         .update({ last_active: new Date().toISOString() })
         .eq('id', userId);
 
@@ -262,7 +261,7 @@ class DatabaseService {
   async upgradeToPremium(userId: string): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from(TABLES.USER_PROFILES)
         .update({ 
           subscription_tier: 'premium',
           updated_at: new Date().toISOString()
@@ -292,7 +291,7 @@ class DatabaseService {
   }): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase
-        .from('detection_events')
+        .from(TABLES.DETECTION_EVENTS)
         .insert([{
           user_id: userId,
           sound_type: event.soundType,
@@ -322,7 +321,7 @@ class DatabaseService {
       startDate.setDate(startDate.getDate() - days);
 
       const { data, error } = await supabase
-        .from('detection_events')
+        .from(TABLES.DETECTION_EVENTS)
         .select('*')
         .eq('user_id', userId)
         .gte('timestamp', startDate.toISOString())
