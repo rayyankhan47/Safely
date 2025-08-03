@@ -32,7 +32,7 @@ import Questionnaire, { QuestionnaireData } from '../components/Questionnaire';
 const { width, height } = Dimensions.get('window');
 
 function SafelyAppContent() {
-  const { user, isLoading, signUp, signIn, signInWithGoogle, signOut, updatePreferences } = useAuth();
+  const { user, isLoading, signUp, signIn, signInWithGoogle, signInAsMockUser, signOut, updatePreferences } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [showAuth, setShowAuth] = useState<'login' | 'signup' | null>(null);
@@ -263,6 +263,20 @@ function SafelyAppContent() {
     }
   };
 
+  const handleMockUserSignIn = async () => {
+    try {
+      const { error } = await signInAsMockUser();
+      if (!error) {
+        // Skip questionnaire and go straight to main app
+        setIsListening(true);
+      } else {
+        console.error('Mock sign in error:', error.message);
+      }
+    } catch (error) {
+      console.error('Mock sign in error:', error);
+    }
+  };
+
   const handleQuestionnaireComplete = async (data: QuestionnaireData) => {
     setUserPreferences(data);
     setShowQuestionnaire(false);
@@ -449,6 +463,26 @@ function SafelyAppContent() {
               />
             </TouchableOpacity>
           </Animated.View>
+
+          {/* Continue as John button - only show on last step */}
+          {currentStep === steps.length - 1 && (
+            <Animated.View style={[styles.mockUserContainer, buttonsStyle]}>
+              <TouchableOpacity 
+                style={[styles.button, styles.mockUserButton]} 
+                onPress={handleMockUserSignIn}
+              >
+                <Text style={[styles.buttonText, styles.mockUserButtonText]}>
+                  Continue as John
+                </Text>
+                <Ionicons 
+                  name="person-outline" 
+                  size={18} 
+                  color="#60A5FA" 
+                  style={styles.buttonIcon}
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -810,6 +844,18 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginLeft: 8,
+  },
+  mockUserContainer: {
+    marginTop: 16,
+    width: '100%',
+  },
+  mockUserButton: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  mockUserButtonText: {
+    color: '#60A5FA',
   },
   
   // MainApp Styles

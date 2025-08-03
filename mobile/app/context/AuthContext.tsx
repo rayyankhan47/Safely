@@ -22,6 +22,7 @@ interface AuthContextType {
   }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signInAsMockUser: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   updatePreferences: (preferences: any) => Promise<{ error: AuthError | null }>;
 }
@@ -179,6 +180,49 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInAsMockUser = async () => {
+    setIsLoading(true);
+    try {
+      const newUser: User = {
+        id: 'mock-user-id', // Mock ID
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        isFirstTime: false,
+      };
+      setUser(newUser);
+      await saveUserToStorage(newUser);
+      setUserProfile({
+        id: newUser.id,
+        email: newUser.email,
+        first_name: newUser.firstName,
+        last_name: newUser.lastName,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        preferences: {
+          primaryNeed: 'anxiety',
+          sensitivityLevel: 'medium',
+          criticalSounds: ['fire_alarm', 'yelling', 'glass_breaking'],
+          alertPreferences: {
+            notifications: true,
+            haptics: true,
+            soundAlerts: false,
+          },
+          privacyLevel: 'standard',
+          usagePattern: 'regular',
+        },
+        subscription_tier: 'free',
+        last_active: new Date().toISOString(),
+      });
+      return { error: null };
+    } catch (error) {
+      console.error('Error during mock sign in:', error);
+      return { error: { message: 'An unexpected error occurred' } };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     setIsLoading(true);
     try {
@@ -224,6 +268,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signIn,
     signInWithGoogle,
+    signInAsMockUser,
     signOut,
     updatePreferences,
   };
