@@ -40,7 +40,7 @@ export default function SafelyApp() {
 
   const steps = [
     {
-      title: "Welcome to Safely",
+      title: "Safely",
       subtitle: "Your AI-powered safety companion",
       description: "Safely listens to your environment and alerts you to important sounds while you're wearing headphones.",
       icon: "shield-checkmark",
@@ -63,25 +63,29 @@ export default function SafelyApp() {
   ];
 
   useEffect(() => {
-    // Staggered animation sequence
-    // 1. Title appears first
+    // Animation sequence:
+    // 1. "Safely" appears big and centered (0ms)
     titleAnim.value = withTiming(1, { duration: 600 });
     
-    // 2. Title moves up and subtitle appears
+    // 2. "Safely" stays for 2 seconds, then moves up over 1 second (2000ms)
     setTimeout(() => {
-      titleAnim.value = withSpring(1, { damping: 20, stiffness: 100 });
-      subtitleAnim.value = withTiming(1, { duration: 400 });
-    }, 800);
+      titleAnim.value = withTiming(1, { duration: 1000 });
+    }, 2000);
     
-    // 3. Description appears
+    // 3. Subtitle appears as title reaches final position (2800ms)
+    setTimeout(() => {
+      subtitleAnim.value = withTiming(1, { duration: 400 });
+    }, 2800);
+    
+    // 4. Description appears (3200ms)
     setTimeout(() => {
       descriptionAnim.value = withTiming(1, { duration: 400 });
-    }, 1200);
+    }, 3200);
     
-    // 4. Buttons appear
+    // 5. Buttons appear (3600ms)
     setTimeout(() => {
       buttonsAnim.value = withTiming(1, { duration: 400 });
-    }, 1600);
+    }, 3600);
     
     // Background animation
     backgroundAnim.value = withRepeat(
@@ -120,7 +124,22 @@ export default function SafelyApp() {
   const titleStyle = useAnimatedStyle(() => ({
     opacity: titleAnim.value,
     transform: [
-      { translateY: interpolate(titleAnim.value, [0, 1], [50, 0], Extrapolate.CLAMP) }
+      { 
+        translateY: interpolate(
+          titleAnim.value, 
+          [0, 1], 
+          [height / 2 - 100, 0], // Start centered, move to top
+          Extrapolate.CLAMP
+        ) 
+      },
+      {
+        scale: interpolate(
+          titleAnim.value,
+          [0, 1],
+          [1.5, 1], // Start big, scale down to normal
+          Extrapolate.CLAMP
+        )
+      }
     ]
   }));
 
@@ -327,13 +346,13 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   title: {
-    fontSize: 32,
+    fontSize: 48,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.5,
-    lineHeight: 40,
+    lineHeight: 56,
   },
   subtitle: {
     fontSize: 18,
