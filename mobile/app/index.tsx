@@ -403,36 +403,72 @@ function SafelyAppContent() {
   );
 }
 
-// Main App Component (placeholder for now)
+// Main App Component with real audio functionality
 function MainApp() {
-  const [isListening, setIsListening] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const [currentSounds, setCurrentSounds] = useState<string[]>([]);
   const [alertLevel, setAlertLevel] = useState<'none' | 'low' | 'medium' | 'high'>('none');
   const [showSettings, setShowSettings] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'checking'>('checking');
   
   // Animation values for audio visualizer
   const audioBars = Array.from({ length: 20 }, () => useSharedValue(0));
   const pulseAnim = useSharedValue(1);
   
-  // Simulate audio detection (replace with real YAMNet later)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate audio bars
-      audioBars.forEach((bar, index) => {
-        bar.value = withTiming(Math.random() * 100, { duration: 200 });
-      });
-      
-      // Simulate sound detection
-      const sounds = ['Background noise', 'Keyboard typing', 'Distant conversation'];
-      const randomSounds = sounds.filter(() => Math.random() > 0.7);
-      setCurrentSounds(randomSounds);
-      
-      // Simulate alert levels
-      const levels: Array<'none' | 'low' | 'medium' | 'high'> = ['none', 'low', 'medium', 'high'];
-      setAlertLevel(levels[Math.floor(Math.random() * 4)]);
-    }, 1000);
+  // Import audio service
+  const AudioService = require('../services/AudioService').default;
+  
+  // Handle sound detection
+  const handleSoundDetected = (result: any) => {
+    console.log('Sound detected:', result);
     
-    return () => clearInterval(interval);
+    // Update current sounds
+    setCurrentSounds(prev => {
+      const newSounds = [...prev, result.soundType];
+      return newSounds.slice(-5); // Keep last 5 sounds
+    });
+    
+    // Update alert level based on critical sounds
+    if (result.isCritical) {
+      setAlertLevel('high');
+      // TODO: Trigger haptic feedback and notification
+    } else if (result.confidence > 0.7) {
+      setAlertLevel('medium');
+    } else {
+      setAlertLevel('low');
+    }
+    
+    // Update audio visualizer
+    audioBars.forEach((bar, index) => {
+      bar.value = withTiming(result.confidence * 100, { duration: 200 });
+    });
+  };
+  
+  // Handle permission denied
+  const handlePermissionDenied = () => {
+    setPermissionStatus('denied');
+    setIsListening(false);
+  };
+  
+  // Start listening when component mounts
+  useEffect(() => {
+    const startAudio = async () => {
+      const status = await AudioService.checkPermissions();
+      if (status.granted) {
+        setPermissionStatus('granted');
+        const success = await AudioService.startListening(handleSoundDetected, handlePermissionDenied);
+        setIsListening(success);
+      } else {
+        setPermissionStatus('denied');
+      }
+    };
+    
+    startAudio();
+    
+    // Cleanup on unmount
+    return () => {
+      AudioService.stopListening();
+    };
   }, []);
   
   // Pulse animation for listening indicator
@@ -465,6 +501,37 @@ function MainApp() {
     }
   };
   
+  // Show permission request if needed
+  if (permissionStatus === 'denied') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0D1117" />
+        
+        <View style={styles.permissionContainer}>
+          <Ionicons name="mic-off" size={64} color="#60A5FA" />
+          <Text style={styles.permissionTitle}>Microphone Access Required</Text>
+          <Text style={styles.permissionDescription}>
+            Safely needs microphone access to detect important sounds around you. 
+            Your privacy is protected - no audio is recorded or sent online.
+          </Text>
+          <TouchableOpacity 
+            style={styles.permissionButton}
+            onPress={async () => {
+              const status = await AudioService.requestPermissions();
+              if (status.granted) {
+                setPermissionStatus('granted');
+                const success = await AudioService.startListening(handleSoundDetected, handlePermissionDenied);
+                setIsListening(success);
+              }
+            }}
+          >
+            <Text style={styles.permissionButtonText}>Grant Permission</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D1117" />
@@ -898,6 +965,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -1,
     // Remove text shadow to match final state
+  },
+  
+  // Permission UI Styles
+  permissionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  permissionTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  permissionDescription: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  permissionButton: {
+    backgroundColor: '#60A5FA',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
