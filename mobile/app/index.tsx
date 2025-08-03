@@ -46,22 +46,22 @@ function SafelyAppContent() {
   const steps = [
     {
       title: "Safely",
-      subtitle: "Your AI-powered safety companion",
-      description: "Safely listens to your environment and alerts you to important sounds while you're wearing headphones.",
+      subtitle: "For anxiety, sensory sensitivity, and peace of mind",
+      description: "Designed for people who struggle to wear headphones due to anxiety, OCD, autism, or trauma. Enjoy music without fear of missing important sounds.",
       icon: "shield-checkmark",
       gradient: ["#EF4444", "#DC2626"]
     },
     {
-      title: "Stay Aware",
-      subtitle: "Never miss what matters",
-      description: "From fire alarms to baby cries, from emergency announcements to breaking glass - Safely keeps you informed.",
+      title: "Freedom to Listen",
+      subtitle: "Break free from obsessive worry",
+      description: "Whether you have anxiety about safety, sensory processing differences, or trauma-related hypervigilance - Safely gives you back the joy of music.",
       icon: "ear",
       gradient: ["#EF4444", "#DC2626"]
     },
     {
-      title: "Privacy First",
-      subtitle: "Your data stays yours",
-      description: "All audio processing happens locally on your device. Nothing is recorded or sent to our servers.",
+      title: "Your Safety, Your Privacy",
+      subtitle: "Complete control and peace of mind",
+      description: "All processing happens on your device. No recordings, no data sharing. Just the freedom to enjoy music while staying aware of what matters.",
       icon: "lock-closed",
       gradient: ["#EF4444", "#DC2626"]
     }
