@@ -231,21 +231,6 @@ export default function SafelyScreen() {
           </View>
         )}
       </View>
-    </View>
-  );
-            </Text>
-            
-            {/* Test button for sound detection */}
-            <TouchableOpacity style={styles.testButton} onPress={simulateSoundDetection}>
-              <Text style={styles.testButtonText}>Test Sound Detection</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
-              <Text style={styles.disconnectButtonText}>Disconnect</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
       
       <TouchableOpacity style={styles.backButton} onPress={() => setStep(2)}>
         <Text style={styles.backButtonText}>← Back</Text>
