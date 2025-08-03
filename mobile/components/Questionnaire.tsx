@@ -132,32 +132,40 @@ export default function Questionnaire({ onComplete, onSkip }: QuestionnaireProps
   }));
 
   React.useEffect(() => {
-    questionAnim.value = withTiming(1, { duration: 600 });
-    progressAnim.value = withTiming((currentQuestion + 1) / questions.length, { duration: 300 });
+    // Simplified animation without potential crash points
+    try {
+      questionAnim.value = withTiming(1, { duration: 600 });
+      progressAnim.value = withTiming((currentQuestion + 1) / questions.length, { duration: 300 });
+    } catch (error) {
+      console.error('Animation error:', error);
+    }
   }, [currentQuestion]);
 
   const handleAnswer = (questionId: string, value: any) => {
-    const question = questions[currentQuestion];
-    
-    if (question.type === 'multiple') {
-      // Handle multiple selection
-      const currentAnswers = answers[questionId] as string[] || [];
-      const newAnswers = currentAnswers.includes(value)
-        ? currentAnswers.filter(v => v !== value)
-        : [...currentAnswers, value];
+    try {
+      const question = questions[currentQuestion];
       
-      setAnswers(prev => ({ ...prev, [questionId]: newAnswers }));
-    } else {
-      // Handle single selection
-      setAnswers(prev => ({ ...prev, [questionId]: value }));
+      if (question.type === 'multiple') {
+        // Handle multiple selection
+        const currentAnswers = answers[questionId] as string[] || [];
+        const newAnswers = currentAnswers.includes(value)
+          ? currentAnswers.filter(v => v !== value)
+          : [...currentAnswers, value];
+        
+        setAnswers(prev => ({ ...prev, [questionId]: newAnswers }));
+      } else {
+        // Handle single selection
+        setAnswers(prev => ({ ...prev, [questionId]: value }));
+      }
+    } catch (error) {
+      console.error('Error handling answer:', error);
     }
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
-      questionAnim.value = withTiming(0, { duration: 300 }, () => {
-        setCurrentQuestion(prev => prev + 1);
-      });
+      // Simple state update without animation callback
+      setCurrentQuestion(prev => prev + 1);
     } else {
       // Complete questionnaire
       const finalData: QuestionnaireData = {
@@ -178,9 +186,8 @@ export default function Questionnaire({ onComplete, onSkip }: QuestionnaireProps
 
   const handleBack = () => {
     if (currentQuestion > 0) {
-      questionAnim.value = withTiming(0, { duration: 300 }, () => {
-        setCurrentQuestion(prev => prev - 1);
-      });
+      // Simple state update without animation callback
+      setCurrentQuestion(prev => prev - 1);
     }
   };
 
@@ -195,6 +202,15 @@ export default function Questionnaire({ onComplete, onSkip }: QuestionnaireProps
   };
 
   const currentQuestionData = questions[currentQuestion];
+
+  // Safety check to prevent crashes
+  if (!currentQuestionData) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.questionTitle}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -426,5 +442,10 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 
