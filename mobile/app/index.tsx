@@ -67,24 +67,24 @@ export default function SafelyApp() {
     // 1. "Safely" appears big and centered (0ms)
     titleAnim.value = withTiming(1, { duration: 600 });
     
-    // 2. "Safely" stays for 2 seconds, then moves up over 1 second (2000ms)
+    // 2. "Safely" stays for 0.8 seconds, then moves up over 1 second (800ms)
     setTimeout(() => {
       titleAnim.value = withTiming(1, { duration: 1000 });
+    }, 800);
+    
+    // 3. Subtitle appears as title reaches final position (2000ms)
+    setTimeout(() => {
+      subtitleAnim.value = withTiming(1, { duration: 600 });
     }, 2000);
     
-    // 3. Subtitle appears as title reaches final position (2800ms)
+    // 4. Description appears (2800ms)
     setTimeout(() => {
-      subtitleAnim.value = withTiming(1, { duration: 400 });
+      descriptionAnim.value = withTiming(1, { duration: 600 });
     }, 2800);
-    
-    // 4. Description appears (3200ms)
-    setTimeout(() => {
-      descriptionAnim.value = withTiming(1, { duration: 400 });
-    }, 3200);
     
     // 5. Buttons appear (3600ms)
     setTimeout(() => {
-      buttonsAnim.value = withTiming(1, { duration: 400 });
+      buttonsAnim.value = withTiming(1, { duration: 600 });
     }, 3600);
     
     // Background animation
